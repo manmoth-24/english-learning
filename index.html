@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect the Dots - Learning Feed</title>
+    <style>
+        /* --- CSS スタイル定義 --- */
+        :root {
+            --primary-color: #007bff;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --highlight-color: #e7f3ff;
+            --highlight-border: #007bff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* コンテナ（スマホ幅を意識） */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        /* ヘッダー */
+        header {
+            background: var(--card-bg);
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { margin: 0; font-size: 1.2rem; }
+
+        /* プレ問題（ストーリー風）エリア */
+        .story-section {
+            padding: 20px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .quiz-box {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+        .quiz-options button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: white;
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .quiz-options button:hover { background: #eee; }
+
+        /* 投稿カード (SNS風) */
+        .post-card {
+            background: var(--card-bg);
+            margin-bottom: 15px;
+            border-radius: 8px; /* スマホなら0でも良いが少し丸く */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* 投稿ヘッダー */
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        .user-info h3 { margin: 0; font-size: 0.95rem; }
+        .user-info span { font-size: 0.8rem; color: #65676b; }
+
+        /* 投稿本文 */
+        .post-content {
+            padding: 0 15px 15px 15px;
+            font-size: 1rem;
+        }
+
+        /* 難しい単語のスタイル */
+        .vocab {
+            border-bottom: 2px dotted var(--highlight-border);
+            background-color: var(--highlight-color);
+            cursor: pointer;
+            position: relative;
+            font-weight: bold;
+            color: #0056b3;
+        }
+        
+        /* 単語の意味ツールチップ */
+        .tooltip-box {
+            display: none;
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .tooltip-box::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        .vocab.active .tooltip-box { display: block; }
+
+        /* アクションボタン (いいね/コメント) */
+        .post-actions {
+            padding: 10px 15px;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 20px;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: #65676b;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        .action-btn.liked { color: #e0245e; }
+
+        /* コメントセクション */
+        .comment-section {
+            padding: 10px 15px;
+            background-color: #fcfcfc;
+        }
+        .comment-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 10px 0;
+        }
+        .comment-item {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        .comment-user { font-weight: bold; margin-right: 5px; }
+        
+        .comment-input-area {
+            display: flex;
+            gap: 10px;
+        }
+        .comment-input-area input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+        .comment-input-area button {
+            padding: 8px 15px;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Unit: Power of Words</h1>
+        <div style="font-size: 0.8rem;">User: <strong>Guest</strong></div>
+    </header>
+
+    <div class="container">
+        <section class="story-section" id="preQuiz">
+            <h2>Today's Question</h2>
+            <div class="quiz-box">
+                <p>Q. 第1段落でジョブズは「3つの話をする」と言っていますが、それは何ですか？</p>
+                <div class="quiz-options">
+                    <button onclick="checkAnswer(false)">A. Appleの製品自慢</button>
+                    <button onclick="checkAnswer(true)">B. ただの個人的な身の上話</button>
+                </div>
+                <p id="quizResult" style="margin-top:10px; font-weight:bold; display:none;"></p>
+            </div>
+        </section>
+
+        <article class="post-card">
+            <div class="post-header">
+                <div class="avatar">SJ</div>
+                <div class="user-info">
+                    <h3>Steve Jobs</h3>
+                    <span>Stanford University • Lesson 2</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>
+                    I am honored to be with you today at your 
+                    <span class="vocab" data-meaning="卒業式">commencement<span class="tooltip-box">卒業式</span></span> 
+                    from one of the finest universities in the world. Today I want to tell you three stories from my life. That’s it. No big 
+                    <span class="vocab" data-meaning="取引 / 大したこと">deal<span class="tooltip-box">取引 / 大したこと</span></span>. 
+                    Just three stories.
+                </p>
+            </div>
+            <div class="post-actions">
+                <button class="action-btn" onclick="toggleLike(this)">♥ Like</button>
+                <button class="action-btn">💬 Comment</button>
+            </div>
+            <div class="comment-section">
+                <ul class="comment-list" id="comments-1">
+                    <li class="comment-item"><span class="comment-user">Teacher:</span> commencement は「開始」という意味もあるよ。</li>
+                </ul>
+                <div class="comment-input-area">
+                    <input type="text" placeholder="質問やメモを書く..." id="input-1">
+                    <button onclick="addComment('1')">Post</button>
+                </div>
+            </div>
+        </article>
+
+        <article class="post-card">
+            <div class="post-header">
+                <div class="avatar">SJ</div>
+                <div class="user-info">
+                    <h3>Steve Jobs</h3>
+                    <span>Story 1: Connecting the Dots</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>
+                    The first story is about 
+                    <span class="vocab" data-meaning="点をつなぐ">connecting the dots<span class="tooltip-box">点をつなぐ</span></span>.
+                    I dropped out of Reed College after the first six months. I couldn’t see the point in it. 
+                    I had no idea what I wanted to do with my life and no idea how college was going to help me 
+                    <span class="vocab" data-meaning="理解する / 解決する">figure it out<span class="tooltip-box">理解する / 解決する</span></span>.
+                </p>
+                <p>
+                    So I decided to <span class="vocab" data-meaning="中退する">drop out<span class="tooltip-box">中退する</span></span> 
+                    and believe that it would all work out OK.
+                </p>
+            </div>
+            <div class="post-actions">
+                <button class="action-btn" onclick="toggleLike(this)">♥ Like</button>
+                <button class="action-btn">💬 Comment</button>
+            </div>
+            <div class="comment-section">
+                <ul class="comment-list" id="comments-2">
+                    <li class="comment-item"><span class="comment-user">UserA:</span> figure out = understand って習った！</li>
+                    <li class="comment-item"><span class="comment-user">UserB:</span> 中退する決断力がすごい...</li>
+                </ul>
+                <div class="comment-input-area">
+                    <input type="text" placeholder="質問やメモを書く..." id="input-2">
+                    <button onclick="addComment('2')">Post</button>
+                </div>
+            </div>
+        </article>
+
+        <article class="post-card">
+            <div class="post-content" style="color:#888; text-align:center; padding:20px;">
+                <p>... Loading next stories ...</p>
+            </div>
+        </article>
+
+    </div>
+
+    <script>
+        // --- JavaScript 機能 ---
+
+        // 1. 単語の意味表示（トグル機能）
+        const vocabWords = document.querySelectorAll('.vocab');
+        vocabWords.forEach(word => {
+            word.addEventListener('click', function(e) {
+                // 他の開いているツールチップを閉じる（オプション）
+                vocabWords.forEach(w => {
+                    if (w !== this) w.classList.remove('active');
+                });
+                // クリックされた単語のツールチップを切り替え
+                this.classList.toggle('active');
+                e.stopPropagation(); // 親要素へのイベント伝播を止める
+            });
+        });
+
+        // 画面の何もないところをクリックしたらツールチップを閉じる
+        document.addEventListener('click', function() {
+            vocabWords.forEach(w => w.classList.remove('active'));
+        });
+
+        // 2. クイズ機能
+        function checkAnswer(isCorrect) {
+            const resultBox = document.getElementById('quizResult');
+            resultBox.style.display = 'block';
+            if (isCorrect) {
+                resultBox.innerText = "Correct! 正解です。「大したことじゃない、ただの3つの話だ」と謙遜しています。";
+                resultBox.style.color = "#aaffaa";
+            } else {
+                resultBox.innerText = "Try again! 自慢話ではありません。";
+                resultBox.style.color = "#ffaaaa";
+            }
+        }
+
+        // 3. いいね機能
+        function toggleLike(btn) {
+            btn.classList.toggle('liked');
+            if (btn.classList.contains('liked')) {
+                btn.innerText = "♥ Liked";
+            } else {
+                btn.innerText = "♥ Like";
+            }
+        }
+
+        // 4. コメント投稿機能
+        function addComment(id) {
+            const inputField = document.getElementById('input-' + id);
+            const list = document.getElementById('comments-' + id);
+            const text = inputField.value;
+
+            if (text.trim() === "") return; // 空文字なら何もしない
+
+            // 新しいコメント要素を作成
+            const newLi = document.createElement('li');
+            newLi.className = 'comment-item';
+            // ユーザー名は仮で "You" とする
+            newLi.innerHTML = `<span class="comment-user">You:</span> ${text}`;
+            
+            // リストに追加
+            list.appendChild(newLi);
+
+            // 入力欄をクリア
+            inputField.value = "";
+        }
+    </script>
+</body>
+</html>
