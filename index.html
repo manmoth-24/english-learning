@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect the Dots - Learning Feed</title>
+    <title>Connect the Dots - Full Version</title>
     <style>
-        /* --- CSS スタイル定義 --- */
+        /* --- デザイン定義 --- */
         :root {
             --primary-color: #007bff;
-            --bg-color: #f0f2f5;
+            --bg-color: #f4f6f8;
             --card-bg: #ffffff;
             --text-color: #333;
-            --highlight-color: #e7f3ff;
-            --highlight-border: #007bff;
+            --accent-color: #ff9800;
         }
 
         body {
@@ -21,356 +20,447 @@
             color: var(--text-color);
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-        }
-
-        /* コンテナ（スマホ幅を意識） */
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding-bottom: 80px;
+            padding-bottom: 100px;
         }
 
         /* ヘッダー */
         header {
-            background: var(--card-bg);
+            background: #fff;
             padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid #ddd;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
-
         h1 { margin: 0; font-size: 1.2rem; }
 
-        /* プレ問題（ストーリー風）エリア */
-        .story-section {
-            padding: 20px 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* タブナビゲーション */
+        .tab-nav {
+            display: flex;
+            justify-content: space-around;
+            background: #fff;
+            padding: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab-btn {
+            flex: 1;
+            border: none;
+            background: none;
+            font-weight: bold;
+            color: #888;
+            padding: 15px 0;
+            cursor: pointer;
+            font-size: 0.95rem;
+            position: relative;
+        }
+        .tab-btn.active {
+            color: var(--primary-color);
+        }
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            width: 60%;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+
+        /* コンテナ */
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- クイズエリア --- */
+        .quiz-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            padding: 20px;
             color: white;
             margin-bottom: 20px;
-            text-align: center;
+            box-shadow: 0 4px 10px rgba(118, 75, 162, 0.3);
         }
-        .quiz-box {
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            backdrop-filter: blur(5px);
-        }
+        .quiz-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; opacity: 0.9;}
+        .quiz-question { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
         .quiz-options button {
             display: block;
             width: 100%;
-            margin: 10px 0;
-            padding: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
             border: none;
-            border-radius: 20px;
-            background: white;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.9);
             color: #333;
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
+            text-align: left;
         }
-        .quiz-options button:hover { background: #eee; }
+        .quiz-options button:hover { background: #fff; transform: translateX(5px); }
+        .quiz-feedback { margin-top: 10px; font-weight: bold; min-height: 1.5em; }
 
-        /* 投稿カード (SNS風) */
-        .post-card {
-            background: var(--card-bg);
-            margin-bottom: 15px;
-            border-radius: 8px; /* スマホなら0でも良いが少し丸く */
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            overflow: hidden;
+        /* --- 全文表示 (Full Text) スタイル --- */
+        .full-text-paper {
+            background: white;
+            padding: 30px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            font-family: Georgia, "Times New Roman", Times, serif; 
+            line-height: 2.0;
+            font-size: 1.1rem;
+            color: #222;
+        }
+        .full-text-paper h2 { 
+            font-size: 1.4rem; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 15px; 
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .full-text-paper p { margin-bottom: 2em; }
+        
+        /* インタラクティブ単語 */
+        .interactive-word {
+            color: #0056b3;
+            font-weight: bold;
+            border-bottom: 2px dotted #0056b3;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 0 2px;
+            background-color: rgba(0, 123, 255, 0.05);
+            border-radius: 4px;
+        }
+        .interactive-word:hover {
+            background-color: #e7f3ff;
         }
 
-        /* 投稿ヘッダー */
-        .post-header {
-            display: flex;
+        /* --- 単語詳細モーダル (ポップアップ) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
             align-items: center;
-            padding: 12px;
+            backdrop-filter: blur(3px);
         }
-        .avatar {
-            width: 40px;
-            height: 40px;
-            background-color: #333;
-            border-radius: 50%;
-            margin-right: 10px;
+        .modal-overlay.open { display: flex; }
+        
+        .word-card-modal {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-word { font-size: 1.8rem; font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary-color); }
+        .modal-meaning { font-size: 1.1rem; color: #333; margin-bottom: 20px; display: block; font-weight: bold;}
+        .modal-desc { font-size: 0.9rem; color: #666; margin-bottom: 20px; line-height: 1.5; text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px;}
+        
+        .modal-close {
+            position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #999;
+        }
+        .speak-btn-large {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 0.8rem;
+            gap: 8px;
+            margin: 0 auto;
         }
-        .user-info h3 { margin: 0; font-size: 0.95rem; }
-        .user-info span { font-size: 0.8rem; color: #65676b; }
+        .speak-btn-large:hover { background: #0069d9; }
 
-        /* 投稿本文 */
-        .post-content {
-            padding: 0 15px 15px 15px;
-            font-size: 1rem;
-        }
-
-        /* 難しい単語のスタイル */
-        .vocab {
-            border-bottom: 2px dotted var(--highlight-border);
-            background-color: var(--highlight-color);
-            cursor: pointer;
-            position: relative;
-            font-weight: bold;
-            color: #0056b3;
-        }
-        
-        /* 単語の意味ツールチップ */
-        .tooltip-box {
-            display: none;
-            position: absolute;
-            bottom: 120%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            z-index: 10;
-        }
-        .tooltip-box::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #333 transparent transparent transparent;
-        }
-        .vocab.active .tooltip-box { display: block; }
-
-        /* アクションボタン (いいね/コメント) */
-        .post-actions {
-            padding: 10px 15px;
-            border-top: 1px solid #eee;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            gap: 20px;
-        }
-        .action-btn {
-            background: none;
-            border: none;
-            color: #65676b;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.9rem;
-        }
-        .action-btn.liked { color: #e0245e; }
-
-        /* コメントセクション */
-        .comment-section {
-            padding: 10px 15px;
-            background-color: #fcfcfc;
-        }
-        .comment-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 10px 0;
-        }
-        .comment-item {
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-        .comment-user { font-weight: bold; margin-right: 5px; }
-        
-        .comment-input-area {
-            display: flex;
-            gap: 10px;
-        }
-        .comment-input-area input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            outline: none;
-        }
-        .comment-input-area button {
-            padding: 8px 15px;
-            border: none;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 20px;
-            cursor: pointer;
-        }
+        /* SNS風フィード簡易版 */
+        .feed-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .feed-user { display: flex; align-items: center; margin-bottom: 10px; font-weight: bold; }
+        .feed-avatar { width: 35px; height: 35px; background: #333; border-radius: 50%; margin-right: 10px; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;}
 
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Unit: Power of Words</h1>
-        <div style="font-size: 0.8rem;">User: <strong>Guest</strong></div>
+        <h1>Story 1: Connecting the Dots</h1>
     </header>
 
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('fulltext')">Full Text (全文)</button>
+        <button class="tab-btn" onclick="switchTab('quiz')">Quiz (問題)</button>
+        <button class="tab-btn" onclick="switchTab('feed')">Discussion (SNS)</button>
+    </nav>
+
     <div class="container">
-        <section class="story-section" id="preQuiz">
-            <h2>Today's Question</h2>
-            <div class="quiz-box">
-                <p>Q. 第1段落でジョブズは「3つの話をする」と言っていますが、それは何ですか？</p>
-                <div class="quiz-options">
-                    <button onclick="checkAnswer(false)">A. Appleの製品自慢</button>
-                    <button onclick="checkAnswer(true)">B. ただの個人的な身の上話</button>
-                </div>
-                <p id="quizResult" style="margin-top:10px; font-weight:bold; display:none;"></p>
-            </div>
-        </section>
 
-        <article class="post-card">
-            <div class="post-header">
-                <div class="avatar">SJ</div>
-                <div class="user-info">
-                    <h3>Steve Jobs</h3>
-                    <span>Stanford University • Lesson 2</span>
-                </div>
-            </div>
-            <div class="post-content">
+        <div id="tab-fulltext" class="tab-content active">
+            <div class="full-text-paper">
+                <h2>The First Story</h2>
+                
                 <p>
-                    I am honored to be with you today at your 
-                    <span class="vocab" data-meaning="卒業式">commencement<span class="tooltip-box">卒業式</span></span> 
-                    from one of the finest universities in the world. Today I want to tell you three stories from my life. That’s it. No big 
-                    <span class="vocab" data-meaning="取引 / 大したこと">deal<span class="tooltip-box">取引 / 大したこと</span></span>. 
-                    Just three stories.
+                    I am honored to be with you today at your <span class="interactive-word" onclick="openWord('commencement')">commencement</span> from one of the finest universities in the world. I never graduated from college. Truth be told, this is the closest I've ever gotten to a college graduation. Today I want to tell you three stories from my life. That’s it. No big deal. Just three stories.
                 </p>
-            </div>
-            <div class="post-actions">
-                <button class="action-btn" onclick="toggleLike(this)">♥ Like</button>
-                <button class="action-btn">💬 Comment</button>
-            </div>
-            <div class="comment-section">
-                <ul class="comment-list" id="comments-1">
-                    <li class="comment-item"><span class="comment-user">Teacher:</span> commencement は「開始」という意味もあるよ。</li>
-                </ul>
-                <div class="comment-input-area">
-                    <input type="text" placeholder="質問やメモを書く..." id="input-1">
-                    <button onclick="addComment('1')">Post</button>
-                </div>
-            </div>
-        </article>
 
-        <article class="post-card">
-            <div class="post-header">
-                <div class="avatar">SJ</div>
-                <div class="user-info">
-                    <h3>Steve Jobs</h3>
-                    <span>Story 1: Connecting the Dots</span>
-                </div>
-            </div>
-            <div class="post-content">
                 <p>
-                    The first story is about 
-                    <span class="vocab" data-meaning="点をつなぐ">connecting the dots<span class="tooltip-box">点をつなぐ</span></span>.
-                    I dropped out of Reed College after the first six months. I couldn’t see the point in it. 
-                    I had no idea what I wanted to do with my life and no idea how college was going to help me 
-                    <span class="vocab" data-meaning="理解する / 解決する">figure it out<span class="tooltip-box">理解する / 解決する</span></span>.
+                    The first story is about <span class="interactive-word" onclick="openWord('connecting_the_dots')">connecting the dots</span>.
                 </p>
-                <p>
-                    So I decided to <span class="vocab" data-meaning="中退する">drop out<span class="tooltip-box">中退する</span></span> 
-                    and believe that it would all work out OK.
-                </p>
-            </div>
-            <div class="post-actions">
-                <button class="action-btn" onclick="toggleLike(this)">♥ Like</button>
-                <button class="action-btn">💬 Comment</button>
-            </div>
-            <div class="comment-section">
-                <ul class="comment-list" id="comments-2">
-                    <li class="comment-item"><span class="comment-user">UserA:</span> figure out = understand って習った！</li>
-                    <li class="comment-item"><span class="comment-user">UserB:</span> 中退する決断力がすごい...</li>
-                </ul>
-                <div class="comment-input-area">
-                    <input type="text" placeholder="質問やメモを書く..." id="input-2">
-                    <button onclick="addComment('2')">Post</button>
-                </div>
-            </div>
-        </article>
 
-        <article class="post-card">
-            <div class="post-content" style="color:#888; text-align:center; padding:20px;">
-                <p>... Loading next stories ...</p>
+                <p>
+                    I dropped out of Reed College after the first six months, but then stayed around as a drop-in for another 18 months or so before I really quit. So why did I <span class="interactive-word" onclick="openWord('drop_out')">drop out</span>?
+                </p>
+
+                <p>
+                    It started before I was born. My biological mother was a young, unwed college graduate student, and she decided to put me up for adoption. She felt very strongly that I should be adopted by college graduates, so everything was all set for me to be adopted at birth by a lawyer and his wife. Except that when I popped out they decided at the last minute that they really wanted a girl. So my parents, who were on a waiting list, got a call in the middle of the night asking: “We have an unexpected baby boy; do you want him?” They said: “Of course.” My biological mother later found out that my mother had never graduated from college and that my father had never graduated from high school. She refused to sign the final adoption papers. She only relented a few months later when my parents promised that I would someday go to college.
+                </p>
+
+                <p>
+                    And 17 years later I did go to college. But I naively chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college tuition. After six months, I couldn't see the value in it. I had no idea what I wanted to do with my life and no idea how college was going to help me <span class="interactive-word" onclick="openWord('figure_out')">figure it out</span>. And here I was spending all of the money my parents had saved their entire life. So I decided to drop out and trust that it would all work out OK. It was pretty scary at the time, but looking back it was one of the best decisions I ever made. The minute I dropped out I could stop taking the required classes that didn't interest me, and begin dropping in on the ones that looked interesting.
+                </p>
+                
+                <p>
+                   It wasn't all romantic. I didn't have a dorm room, so I slept on the floor in friends' rooms, I returned coke bottles for the 5¢ deposits to buy food with, and I would walk the 7 miles across town every Sunday night to get one good meal a week at the Hare Krishna temple. I loved it. And much of what I stumbled into by following my curiosity and <span class="interactive-word" onclick="openWord('intuition')">intuition</span> turned out to be priceless later on. Let me give you one example.
+                </p>
+
+                <p>
+                   Reed College at that time offered perhaps the best <span class="interactive-word" onclick="openWord('calligraphy')">calligraphy</span> instruction in the country. Throughout the campus every poster, every label on every drawer, was beautifully hand calligraphed. Because I had dropped out and didn't have to take the normal classes, I decided to take a calligraphy class to learn how to do this. I learned about serif and san serif typefaces, about varying the amount of space between different letter combinations, about what makes great <span class="interactive-word" onclick="openWord('typography')">typography</span> great. It was beautiful, historical, artistically subtle in a way that science can't capture, and I found it fascinating.
+                </p>
+
+                <p style="text-align:center; color:#999; font-size:0.9rem;">( ... タップして単語を調べながら読み進めましょう ... )</p>
             </div>
-        </article>
+        </div>
+
+        <div id="tab-quiz" class="tab-content">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <span>Reading Comprehension</span>
+                    <span id="quiz-progress">Q. 1 / 3</span>
+                </div>
+                
+                <div id="quiz-content">
+                    <div class="quiz-question" id="q-text">Loading...</div>
+                    <div class="quiz-options" id="q-options"></div>
+                    <div class="quiz-feedback" id="q-feedback"></div>
+                    <button id="next-btn" style="display:none; margin-top:15px; background:white; color:#333; border:none; padding:10px 20px; border-radius:20px; cursor:pointer; font-weight:bold;" onclick="nextQuestion()">Next Question →</button>
+                </div>
+            </div>
+            
+            <p style="text-align:center; color:#666; font-size:0.9rem;">全問正解してストーリーをマスターしよう！</p>
+        </div>
+
+        <div id="tab-feed" class="tab-content">
+            <div class="feed-item">
+                <div class="feed-user"><div class="feed-avatar">S</div>User A</div>
+                <p>Hare Krishna templeって何？宗教施設？</p>
+                <div style="font-size:0.8rem; color:#666; margin-top:5px;">💬 2 comments</div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-user"><div class="feed-avatar">K</div>User B</div>
+                <p>コーラの瓶を返却して5セントもらう生活、今のジョブズからは想像できないな...</p>
+                <div style="font-size:0.8rem; color:#666; margin-top:5px;">💬 5 comments • ♥ 12 likes</div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-user"><div class="feed-avatar">T</div>Teacher</div>
+                <p>「点と点をつなぐ」は、後になって振り返らないと分からない、という意味だよ。</p>
+            </div>
+        </div>
 
     </div>
 
+    <div class="modal-overlay" id="wordModal" onclick="closeModal(event)">
+        <div class="word-card-modal" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeModalDirect()">×</span>
+            <span class="modal-word" id="m-word">Word</span>
+            <span class="modal-meaning" id="m-meaning">Meaning</span>
+            <div class="modal-desc" id="m-desc">Description goes here...</div>
+            <button class="speak-btn-large" onclick="playCurrentWord()">
+                🔊 Listen
+            </button>
+        </div>
+    </div>
+
     <script>
-        // --- JavaScript 機能 ---
-
-        // 1. 単語の意味表示（トグル機能）
-        const vocabWords = document.querySelectorAll('.vocab');
-        vocabWords.forEach(word => {
-            word.addEventListener('click', function(e) {
-                // 他の開いているツールチップを閉じる（オプション）
-                vocabWords.forEach(w => {
-                    if (w !== this) w.classList.remove('active');
-                });
-                // クリックされた単語のツールチップを切り替え
-                this.classList.toggle('active');
-                e.stopPropagation(); // 親要素へのイベント伝播を止める
-            });
-        });
-
-        // 画面の何もないところをクリックしたらツールチップを閉じる
-        document.addEventListener('click', function() {
-            vocabWords.forEach(w => w.classList.remove('active'));
-        });
-
-        // 2. クイズ機能
-        function checkAnswer(isCorrect) {
-            const resultBox = document.getElementById('quizResult');
-            resultBox.style.display = 'block';
-            if (isCorrect) {
-                resultBox.innerText = "Correct! 正解です。「大したことじゃない、ただの3つの話だ」と謙遜しています。";
-                resultBox.style.color = "#aaffaa";
-            } else {
-                resultBox.innerText = "Try again! 自慢話ではありません。";
-                resultBox.style.color = "#ffaaaa";
+        // --- データ: 単語リスト ---
+        const wordData = {
+            'commencement': {
+                meaning: '卒業式、開始',
+                desc: '大学などの学位授与式のこと。Commence（開始する）という動詞の名詞形でもあり、「卒業は新たな旅の始まり」というニュアンスが含まれる。'
+            },
+            'connecting_the_dots': {
+                meaning: '点と点をつなぐ',
+                desc: '一見無関係に見える過去の経験（点）が、将来において結びつき意味を持つこと。ジョブズの哲学の中心となる概念。'
+            },
+            'drop_out': {
+                meaning: '中退する',
+                desc: '学校や組織から途中で抜けること。ジョブズは「Drop out（中退）」した後、「Drop in（興味のある授業に潜り込む）」し始めたと言っている。'
+            },
+            'figure_out': {
+                meaning: '理解する、解決する',
+                desc: '考えた末に答えを見つけ出すこと。Understandよりも「自分で答えを導き出す」ニュアンスが強い。'
+            },
+            'intuition': {
+                meaning: '直感',
+                desc: '理屈ではなく感覚で物事を捉える力。ジョブズは論理よりもこの直感を大切にした。'
+            },
+            'calligraphy': {
+                meaning: 'カリグラフィー',
+                desc: '西洋の書道。文字を美しく見せるための手法。これが後のMacintoshの美しいフォント機能につながった。'
+            },
+            'typography': {
+                meaning: 'タイポグラフィ',
+                desc: '活字の書体デザインや配置のこと。'
             }
-        }
+        };
 
-        // 3. いいね機能
-        function toggleLike(btn) {
-            btn.classList.toggle('liked');
-            if (btn.classList.contains('liked')) {
-                btn.innerText = "♥ Liked";
-            } else {
-                btn.innerText = "♥ Like";
+        // --- データ: クイズリスト ---
+        const questions = [
+            {
+                q: "Q1. ジョブズが大学を中退した主な理由は何ですか？",
+                options: ["勉強についていけなかったから", "両親の貯金を浪費しているだけで、価値が見出せなかったから", "起業の準備をしたかったから"],
+                ans: 1, // index of correct answer
+                feedback: "正解！高額な授業料に見合う価値が分からず、両親の貯金を使い果たすのを避けるために決断しました。"
+            },
+            {
+                q: "Q2. 中退した後、ジョブズは何をしていましたか？",
+                options: ["すぐにAppleを創業した", "興味のない必須科目をやめて、カリグラフィーなどの授業に潜り込んだ", "実家に帰って休んだ"],
+                ans: 1,
+                feedback: "Correct! 「Drop out」したからこそ、興味のあるクラスに「Drop in」できたと語っています。"
+            },
+            {
+                q: "Q3. カリグラフィーの知識は後に何に役立ちましたか？",
+                options: ["Macintoshの美しいフォント機能", "Appleのロゴデザイン", "Pixarの映画制作"],
+                ans: 0,
+                feedback: "その通り！この時の学びがなければ、PCに美しいフォントが入ることはなかったかもしれません。"
             }
-        }
+        ];
 
-        // 4. コメント投稿機能
-        function addComment(id) {
-            const inputField = document.getElementById('input-' + id);
-            const list = document.getElementById('comments-' + id);
-            const text = inputField.value;
+        let currentQuizIndex = 0;
+        let currentModalWord = "";
 
-            if (text.trim() === "") return; // 空文字なら何もしない
-
-            // 新しいコメント要素を作成
-            const newLi = document.createElement('li');
-            newLi.className = 'comment-item';
-            // ユーザー名は仮で "You" とする
-            newLi.innerHTML = `<span class="comment-user">You:</span> ${text}`;
+        // --- 機能: タブ切り替え ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
             
-            // リストに追加
-            list.appendChild(newLi);
-
-            // 入力欄をクリア
-            inputField.value = "";
+            // ボタンのアクティブ表示更新
+            const btns = document.querySelectorAll('.tab-btn');
+            if(tabId === 'fulltext') btns[0].classList.add('active');
+            if(tabId === 'quiz') btns[1].classList.add('active');
+            if(tabId === 'feed') btns[2].classList.add('active');
         }
+
+        // --- 機能: 単語モーダル ---
+        function openWord(key) {
+            const data = wordData[key];
+            if(!data) return;
+
+            currentModalWord = key.replace(/_/g, " "); // 音声再生用
+            if(key === 'calligraphy' || key === 'typography') currentModalWord = key; // 修正
+
+            document.getElementById('m-word').innerText = currentModalWord.charAt(0).toUpperCase() + currentModalWord.slice(1);
+            document.getElementById('m-meaning').innerText = data.meaning;
+            document.getElementById('m-desc').innerText = data.desc;
+
+            const modal = document.getElementById('wordModal');
+            modal.classList.add('open');
+        }
+
+        function closeModal(e) {
+            if(e.target.classList.contains('modal-overlay')) {
+                document.getElementById('wordModal').classList.remove('open');
+            }
+        }
+        function closeModalDirect() {
+            document.getElementById('wordModal').classList.remove('open');
+        }
+
+        function playCurrentWord() {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(currentModalWord);
+                u.lang = 'en-US';
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        // --- 機能: クイズ ---
+        function loadQuiz() {
+            const qData = questions[currentQuizIndex];
+            document.getElementById('quiz-progress').innerText = `Q. ${currentQuizIndex + 1} / ${questions.length}`;
+            document.getElementById('q-text').innerText = qData.q;
+            document.getElementById('q-feedback').innerText = "";
+            document.getElementById('q-feedback').style.color = "white";
+            document.getElementById('next-btn').style.display = "none";
+
+            const optionsDiv = document.getElementById('q-options');
+            optionsDiv.innerHTML = ""; // クリア
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const qData = questions[currentQuizIndex];
+            const feedbackEl = document.getElementById('q-feedback');
+            
+            if (selectedIndex === qData.ans) {
+                feedbackEl.innerText = qData.feedback;
+                feedbackEl.style.color = "#aaffaa"; // 薄い緑
+                document.getElementById('next-btn').style.display = "inline-block";
+            } else {
+                feedbackEl.innerText = "残念... もう一度文章を読み直してみよう！";
+                feedbackEl.style.color = "#ffcccc"; // 薄い赤
+            }
+        }
+
+        function nextQuestion() {
+            currentQuizIndex++;
+            if (currentQuizIndex < questions.length) {
+                loadQuiz();
+            } else {
+                document.getElementById('quiz-content').innerHTML = `
+                    <div style="text-align:center; padding:20px;">
+                        <h3>Congratulations!</h3>
+                        <p>第1章の内容をマスターしましたね。</p>
+                        <button onclick="currentQuizIndex=0; loadQuiz();" style="padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">最初からやる</button>
+                    </div>
+                `;
+            }
+        }
+
+        // 初期化
+        loadQuiz();
+
     </script>
 </body>
 </html>
