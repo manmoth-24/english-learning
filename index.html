@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steve Jobs - Lesson 1</title>
+    <title>Steve Jobs - Lesson 1 (Advanced)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
@@ -44,7 +44,6 @@
         #tab-words { display: none; }
         #tab-words.active { display: block; }
         
-        /* 赤シート用コントロール */
         .words-controls { display: flex; justify-content: flex-end; margin-bottom: 10px; }
         .red-sheet-btn { 
             background: #fff; border: 1px solid var(--red-sheet); color: var(--red-sheet); 
@@ -60,30 +59,23 @@
         .pos { font-size: 0.75rem; color: #999; margin-right: 5px; background: #eee; padding: 2px 6px; border-radius: 4px; }
         .ja { color: #666; font-size: 0.95rem; transition: 0.2s; padding: 2px 5px; border-radius: 4px; }
         
-        /* 赤シート有効時のスタイル */
-        .red-sheet-mode .ja {
-            background-color: var(--red-sheet);
-            color: var(--red-sheet); /* 文字色も赤にして隠す */
-            cursor: pointer;
-            user-select: none;
-        }
-        /* タップして答えを見る時 */
-        .red-sheet-mode .ja.revealed {
-            background-color: transparent;
-            color: #666;
-        }
-
+        /* 赤シート有効時 */
+        .red-sheet-mode .ja { background-color: var(--red-sheet); color: var(--red-sheet); cursor: pointer; user-select: none; }
+        .red-sheet-mode .ja.revealed { background-color: transparent; color: #666; }
         .play-mini { border: 1px solid var(--primary); color: var(--primary); width: 32px; height: 32px; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 10px; flex-shrink: 0;}
 
         /* --- Tab 3: Quiz (問題) --- */
         #tab-quiz { display: none; }
         #tab-quiz.active { display: block; }
+        .quiz-header { padding: 10px; text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 15px; }
         .quiz-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .quiz-q { font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; }
-        .quiz-opt label { display: block; padding: 10px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; cursor: pointer; }
-        .quiz-opt input { margin-right: 10px; }
-        .quiz-result { margin-top: 10px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; }
-        .check-btn { background: #333; color: white; border: none; padding: 8px 16px; border-radius: 20px; margin-top: 5px; cursor: pointer; }
+        .quiz-q { font-weight: bold; margin-bottom: 15px; font-size: 1.05rem; line-height: 1.5; }
+        .quiz-opt label { display: block; padding: 12px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+        .quiz-opt label:hover { background: #f9f9f9; }
+        .quiz-opt input { margin-right: 10px; transform: scale(1.2); }
+        .quiz-result { margin-top: 15px; font-weight: bold; padding: 15px; border-radius: 8px; display: none; line-height: 1.5; font-size: 0.95rem;}
+        .check-btn { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-top: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+        .check-btn:active { transform: scale(0.98); }
 
         /* --- Tab 4: SNS --- */
         #tab-sns { display: none; }
@@ -123,7 +115,6 @@
         
         <div id="tab-paper" class="active">
             <h2>The First Story</h2>
-            
             <div id="readable-text">
                 <p>I am honored to be with you today at your <span class="w" onclick="showPopup('commencement', '卒業式')">commencement</span> from one of the finest universities in the world.</p>
                 <p>I never graduated from college. Truth be told, this is the closest I've ever gotten to a college graduation. Today I want to tell you three stories from my life. That's it. No big deal. Just three stories.</p>
@@ -146,12 +137,13 @@
                     <span class="material-icons">visibility_off</span> 赤シート
                 </button>
             </div>
-            <ul class="word-list" id="word-list-container">
-                </ul>
+            <ul class="word-list" id="word-list-container"></ul>
         </div>
 
         <div id="tab-quiz">
+            <div class="quiz-header">Advanced Level: Challenge yourself!</div>
             <div id="quiz-container">Loading...</div>
+            <br><br>
         </div>
 
         <div id="tab-sns">
@@ -181,14 +173,12 @@
     </div>
 
     <script>
-        // ★★★ 設定済みのキー ★★★
         const SUPABASE_URL = "https://olmaivevtfipahmceuji.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sbWFpdmV2dGZpcGFobWNldWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNTM1NTYsImV4cCI6MjA4NTYyOTU1Nn0.7RlnISpA9VEWXPMmz0L94l2lCemiXjHblXW8BPI_YP8";   
-        
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 0. 単語データ (画像から抽出) ---
+        // --- 0. データ ---
         const wordData = [
             { en: "commencement", pos: "名", ja: "学位授与式" },
             { en: "deal", pos: "名", ja: "扱い, 処遇; 取引" },
@@ -231,7 +221,71 @@
             { en: "issue", pos: "名", ja: "(雑誌・新聞などの)号" }
         ];
 
-        // --- 1. テキスト読み上げ (ネイティブボイス対応) ---
+        // --- 難問クイズ10問 ---
+        const quizzes = [
+            { 
+                q: "What is the irony in 'this is the closest I've ever gotten to a college graduation'?", 
+                options: ["He graduated secretly.", "He is a dropout speaking at a graduation.", "He hates graduations.", "He went to a wrong college."], 
+                ans: 1,
+                reason: "大学を中退した彼が、名門大学の卒業式でスピーチをしているという状況が皮肉（irony）です。"
+            },
+            { 
+                q: "Why did Jobs describe his college choice as 'naive'?", 
+                options: ["It was too far.", "It was too expensive for his parents.", "It was too difficult.", "He didn't like the major."], 
+                ans: 1,
+                reason: "労働者階級の両親の貯金をすべて高額な授業料（tuition）に使ってしまったためです。"
+            },
+            { 
+                q: "What does 'connecting the dots' imply?", 
+                options: ["Plan every step carefully.", "Life events make sense only when looking back.", "Network with many people.", "Destiny cannot be changed."], 
+                ans: 1,
+                reason: "未来を見て点をつなぐことはできず、後で振り返った時（looking backward）に初めて意味がわかると述べています。"
+            },
+            { 
+                q: "What was a direct result of dropping out?", 
+                options: ["He stopped all studying.", "He stopped required classes and took interesting ones.", "He started Apple immediately.", "He got a full-time job."], 
+                ans: 1,
+                reason: "中退することで必修科目をやめ、興味のあるカリグラフィーなどの授業に潜り込む（drop-in）ことができました。"
+            },
+            { 
+                q: "Why did he take the calligraphy class?", 
+                options: ["For future computer design.", "It was required.", "Out of curiosity and intuition.", "A friend told him to."], 
+                ans: 2,
+                reason: "当時は実用性は考えておらず、歴史的・芸術的な美しさへの好奇心から受講しました。"
+            },
+            { 
+                q: "What does 'It wasn't all romantic' mean?", 
+                options: ["He had no girlfriend.", "He faced hardships like sleeping on floors.", "He disliked Art.", "The campus was ugly."], 
+                ans: 1,
+                reason: "「ロマンチックな話ばかりではない」＝床で寝たり、食事のためにコーラの瓶を集めたりした苦労を指します。"
+            },
+            { 
+                q: "How did calligraphy influence the Macintosh?", 
+                options: ["The physical shape.", "It brought beautiful typography to computers.", "The coding style.", "The marketing."], 
+                ans: 1,
+                reason: "マックは美しいフォント（typography）を持つ最初のコンピュータとなりました。"
+            },
+            { 
+                q: "According to Jobs, you have to trust that...", 
+                options: ["The dots will connect in your future.", "You will be rich.", "College is important.", "Technology saves the world."], 
+                ans: 0,
+                reason: "「点はいずれ将来つながる」と信じることが、心に従う自信を与えてくれると説いています。"
+            },
+            { 
+                q: "What does 'drop out' represent in his path?", 
+                options: ["Staying on the safe path.", "Diverging from the standard path.", "Connecting people.", "Giving up on life."], 
+                ans: 1,
+                reason: "レール（標準的な進路）から外れることを意味します。"
+            },
+            { 
+                q: "What is the main message of this first story?", 
+                options: ["College is a waste.", "Learn calligraphy.", "Seemingly unrelated experiences have meaning later.", "Adoption is hard."], 
+                ans: 2,
+                reason: "一見関係ない経験（点）が、将来どうつながるかを信じて進むことの重要性がテーマです。"
+            }
+        ];
+
+        // --- 1. 音声処理 (ネイティブ優先) ---
         let utterance = null;
         let isPlaying = false;
         let isPaused = false;
@@ -261,19 +315,15 @@
             window.speechSynthesis.cancel();
             const text = document.getElementById('readable-text').innerText;
             utterance = new SpeechSynthesisUtterance(text);
-            
             const enVoice = getEnglishVoice();
             if(enVoice) utterance.voice = enVoice;
-            
             utterance.lang = 'en-US';
             utterance.rate = document.getElementById('speed-rate').value;
-            
             utterance.onend = () => {
                 isPlaying = false;
                 isPaused = false;
                 document.getElementById('play-btn').innerHTML = '<span class="material-icons">play_arrow</span>';
             };
-
             window.speechSynthesis.speak(utterance);
             isPlaying = true;
             isPaused = false;
@@ -296,8 +346,7 @@
             }
         }
 
-        // --- 2. 単語帳 & 赤シート機能 ---
-        
+        // --- 2. 単語帳・赤シート ---
         function renderWords() {
             const container = document.getElementById('word-list-container');
             container.innerHTML = '';
@@ -320,12 +369,10 @@
             isRedSheetActive = !isRedSheetActive;
             const btn = document.getElementById('red-sheet-btn');
             const list = document.getElementById('word-list-container');
-            
             if (isRedSheetActive) {
                 btn.classList.add('active');
                 btn.innerHTML = '<span class="material-icons">visibility</span> 答えを見る';
                 list.classList.add('red-sheet-mode');
-                // 全てのめくった状態をリセット
                 document.querySelectorAll('.ja.revealed').forEach(el => el.classList.remove('revealed'));
             } else {
                 btn.classList.remove('active');
@@ -333,24 +380,10 @@
                 list.classList.remove('red-sheet-mode');
             }
         }
-
         function revealWord(element) {
-            // 赤シートモードの時だけめくれるようにする
-            if (isRedSheetActive) {
-                element.classList.toggle('revealed');
-            }
+            if (isRedSheetActive) element.classList.toggle('revealed');
         }
 
-        // --- 3. 単語再生 (単発) ---
-        let currentWord = "";
-        window.showPopup = (word, mean) => {
-            currentWord = word;
-            document.getElementById('popup-word').innerText = word;
-            document.getElementById('popup-mean').innerText = mean;
-            document.getElementById('popup-overlay').style.display = 'flex';
-        }
-        window.closePopup = () => document.getElementById('popup-overlay').style.display = 'none';
-        window.playCurrentWord = () => speakOne(currentWord);
         window.speakOne = (text) => {
             if(isPlaying) return; 
             const u = new SpeechSynthesisUtterance(text);
@@ -360,13 +393,15 @@
             speechSynthesis.speak(u);
         }
 
-        // --- 4. クイズ機能 ---
-        const quizzes = [
-            { q: "Where did Steve Jobs give this speech?", options: ["Harvard University", "Stanford University", "Reed College"], ans: 1 },
-            { q: "What is the first story about?", options: ["Love and loss", "Death", "Connecting the dots"], ans: 2 },
-            { q: "Why did he drop out of college?", options: ["It was too expensive", "He got a job", "He failed the exam"], ans: 0 }
-        ];
+        window.showPopup = (word, mean) => {
+            document.getElementById('popup-word').innerText = word;
+            document.getElementById('popup-mean').innerText = mean;
+            document.getElementById('popup-overlay').style.display = 'flex';
+        }
+        window.closePopup = () => document.getElementById('popup-overlay').style.display = 'none';
+        window.playCurrentWord = () => speakOne(document.getElementById('popup-word').innerText);
 
+        // --- 3. クイズ機能 (拡張版) ---
         function renderQuiz() {
             const container = document.getElementById('quiz-container');
             container.innerHTML = '';
@@ -378,24 +413,33 @@
                     <div class="quiz-opt">
                         ${item.options.map((opt, i) => `<label><input type="radio" name="q${idx}" value="${i}"> ${opt}</label>`).join('')}
                     </div>
-                    <button class="check-btn" onclick="checkQuiz(${idx}, ${item.ans})">Check</button>
+                    <button class="check-btn" onclick="checkQuiz(${idx})">Check Answer</button>
                     <div id="res-${idx}" class="quiz-result"></div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        window.checkQuiz = (idx, correctAns) => {
+        window.checkQuiz = (idx) => {
+            const item = quizzes[idx];
             const radios = document.getElementsByName(`q${idx}`);
             let val = -1;
             radios.forEach(r => { if(r.checked) val = parseInt(r.value); });
             
             const resBox = document.getElementById(`res-${idx}`);
             resBox.style.display = 'block';
-            if(val === correctAns) {
+            
+            if(val === -1) {
+                resBox.innerText = "Please select an answer.";
+                resBox.style.background = '#eee';
+                resBox.style.color = '#333';
+                return;
+            }
+
+            if(val === item.ans) {
                 resBox.style.background = '#d4edda';
                 resBox.style.color = '#155724';
-                resBox.innerText = "Correct! 🎉";
+                resBox.innerHTML = `Correct! 🎉<br><span style="font-size:0.85rem; font-weight:normal;">${item.reason}</span>`;
             } else {
                 resBox.style.background = '#f8d7da';
                 resBox.style.color = '#721c24';
@@ -403,10 +447,10 @@
             }
         }
 
-        // --- 5. SNS機能 ---
+        // --- 4. SNS ---
         const discussions = [
-            { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Q1】なぜジョブズは大学を中退したのですか？本文から理由を探してみましょう。' },
-            { id: 'q2', author: 'Mr. Tanaka', role: 'teacher', text: '【Q2】"Connecting the dots" とは、ジョブズの人生においてどういう意味でしたか？' }
+            { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Deep Think】もしジョブズが大学を中退していなかったら、世界はどうなっていたと思いますか？' },
+            { id: 'q2', author: 'Mr. Tanaka', role: 'teacher', text: 'あなたの人生における「Connecting the dots」の経験はありますか？' }
         ];
 
         async function initSNS() {
@@ -451,7 +495,7 @@
             input.value = '';
         }
 
-        // --- 共通設定 ---
+        // --- 共通 ---
         window.switchTab = (name) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('div[id^="tab-"]').forEach(d => d.classList.remove('active'));
@@ -466,10 +510,9 @@
             }
         }
 
-        // 起動処理
         initSNS();
         renderQuiz();
-        renderWords(); // 単語リスト生成
+        renderWords();
     </script>
 </body>
 </html>
