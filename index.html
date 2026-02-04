@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steve Jobs - Lesson 1 (Advanced)</title>
+    <title>Steve Jobs - Ultimate Vocab</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <style>
         /* --- 基本設定 --- */
-        :root { --primary: #007AFF; --bg: #F2F2F7; --paper: #FFF; --red-sheet: #FF5252; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 140px; color: #1c1c1e; }
+        :root { --primary: #007AFF; --accent: #FF9500; --bg: #F2F2F7; --paper: #FFF; --red-sheet: #FF5252; --text: #1c1c1e; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 140px; color: var(--text); }
         
         /* ヘッダー */
-        header { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #c6c6c8; position: sticky; top: 0; z-index: 100; }
-        .tab-nav { display: flex; background: #fff; padding: 5px; overflow-x: auto; }
-        .tab-btn { flex: 1; min-width: 80px; padding: 12px; border: none; background: none; font-weight: bold; color: #8e8e93; cursor: pointer; border-bottom: 3px solid transparent; font-size: 0.9rem; white-space: nowrap; }
+        header { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #c6c6c8; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
+        .tab-nav { display: flex; background: #fff; padding: 5px; overflow-x: auto; border-bottom: 1px solid #ddd; }
+        .tab-btn { flex: 1; min-width: 80px; padding: 12px; border: none; background: none; font-weight: bold; color: #8e8e93; cursor: pointer; border-bottom: 3px solid transparent; font-size: 0.9rem; white-space: nowrap; transition: 0.3s; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
         .tab-btn .material-icons { vertical-align: bottom; margin-right: 4px; font-size: 1.2rem;}
 
         .container { max-width: 700px; margin: 0 auto; padding: 15px; }
 
         /* --- Tab 1: Paper (本文) --- */
-        #tab-paper { background: var(--paper); padding: 30px; border-radius: 12px; line-height: 2.0; font-family: "Georgia", serif; font-size: 1.05rem; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        #tab-paper { background: var(--paper); padding: 30px; border-radius: 12px; line-height: 2.2; font-family: "Georgia", serif; font-size: 1.1rem; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative;}
         #tab-paper.active { display: block; }
-        .w { color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(0,122,255,0.3); }
-        .w:active { background: yellow; }
+        .w { color: var(--primary); font-weight: bold; cursor: pointer; border-bottom: 1px dotted var(--primary); transition: background 0.5s; padding: 0 2px; border-radius: 3px; }
+        .w:active, .w.highlight-flash { background: #FFEB3B; color: #000; }
 
-        /* --- 音声プレイヤー（画面下に固定） --- */
+        /* --- 音声プレイヤー（固定） --- */
         .audio-player {
             position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px); border-top: 1px solid #ccc; padding: 10px 20px;
@@ -36,46 +36,57 @@
         }
         .audio-controls { display: flex; align-items: center; gap: 15px; }
         .ctrl-btn { background: none; border: none; cursor: pointer; color: #333; }
-        .ctrl-btn.main { background: var(--primary); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .ctrl-btn.main { background: var(--primary); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .speed-box { font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; width: 80px; }
-        .speed-box input { width: 100%; }
 
-        /* --- Tab 2: Words (単語帳) --- */
+        /* --- Tab 2: Words (最強単語帳) --- */
         #tab-words { display: none; }
         #tab-words.active { display: block; }
         
-        .words-controls { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+        .words-toolbar { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+        .filter-btn { background: none; border: 1px solid #ccc; padding: 6px 12px; border-radius: 16px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #555; }
+        .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
         .red-sheet-btn { 
             background: #fff; border: 1px solid var(--red-sheet); color: var(--red-sheet); 
-            padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;
-            transition: 0.2s;
+            padding: 6px 12px; border-radius: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.85rem;
         }
         .red-sheet-btn.active { background: var(--red-sheet); color: white; }
 
-        .word-list { list-style: none; padding: 0; background: white; border-radius: 12px; overflow: hidden; }
-        .word-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .word-info { flex: 1; }
-        .en { font-weight: bold; font-size: 1.1rem; color: #333; margin-bottom: 2px; }
-        .pos { font-size: 0.75rem; color: #999; margin-right: 5px; background: #eee; padding: 2px 6px; border-radius: 4px; }
-        .ja { color: #666; font-size: 0.95rem; transition: 0.2s; padding: 2px 5px; border-radius: 4px; }
+        .word-list { list-style: none; padding: 0; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .word-item { padding: 15px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: flex-start; gap: 12px; position: relative; }
         
+        /* 単語カード内のレイアウト */
+        .star-check { cursor: pointer; color: #ddd; font-size: 1.5rem; margin-top: 2px; }
+        .star-check.checked { color: var(--accent); }
+
+        .word-content { flex: 1; }
+        .en-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;}
+        .en { font-weight: 800; font-size: 1.15rem; color: #333; }
+        .pos { font-size: 0.7rem; color: #999; background: #eee; padding: 2px 5px; border-radius: 4px; }
+        
+        .ja-row { display: flex; flex-direction: column; gap: 2px; }
+        .ja { color: #444; font-size: 0.95rem; transition: 0.2s; padding: 2px 4px; border-radius: 4px; font-weight: 500; }
+        .syn-row { font-size: 0.8rem; color: #888; display: flex; align-items: center; gap: 4px; margin-top: 2px;}
+        .syn-tag { background: #f0f8ff; color: var(--primary); padding: 1px 5px; border-radius: 3px; font-size: 0.7rem; font-weight: bold; }
+
+        /* アクションボタン群 */
+        .word-actions { display: flex; flex-direction: column; gap: 8px; justify-content: center; height: 100%; }
+        .mini-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #eee; background: white; color: #666; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .mini-btn:hover { background: #f9f9f9; color: var(--primary); border-color: var(--primary); }
+        .mini-btn.play { color: var(--primary); border-color: rgba(0,122,255,0.3); }
+
         /* 赤シート有効時 */
         .red-sheet-mode .ja { background-color: var(--red-sheet); color: var(--red-sheet); cursor: pointer; user-select: none; }
-        .red-sheet-mode .ja.revealed { background-color: transparent; color: #666; }
-        .play-mini { border: 1px solid var(--primary); color: var(--primary); width: 32px; height: 32px; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 10px; flex-shrink: 0;}
+        .red-sheet-mode .ja.revealed { background-color: transparent; color: #444; }
 
-        /* --- Tab 3: Quiz (問題) --- */
+        /* --- Tab 3: Quiz --- */
         #tab-quiz { display: none; }
         #tab-quiz.active { display: block; }
-        .quiz-header { padding: 10px; text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 15px; }
         .quiz-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .quiz-q { font-weight: bold; margin-bottom: 15px; font-size: 1.05rem; line-height: 1.5; }
-        .quiz-opt label { display: block; padding: 12px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
-        .quiz-opt label:hover { background: #f9f9f9; }
-        .quiz-opt input { margin-right: 10px; transform: scale(1.2); }
-        .quiz-result { margin-top: 15px; font-weight: bold; padding: 15px; border-radius: 8px; display: none; line-height: 1.5; font-size: 0.95rem;}
-        .check-btn { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-top: 5px; cursor: pointer; font-weight: bold; width: 100%; }
-        .check-btn:active { transform: scale(0.98); }
+        .quiz-q { font-weight: bold; margin-bottom: 15px; font-size: 1.05rem; }
+        .quiz-opt label { display: block; padding: 12px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; cursor: pointer; }
+        .check-btn { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 20px; width: 100%; font-weight: bold; cursor: pointer; }
+        .quiz-result { margin-top: 15px; padding: 10px; display: none; border-radius: 8px; }
 
         /* --- Tab 4: SNS --- */
         #tab-sns { display: none; }
@@ -85,18 +96,13 @@
         .avatar { width: 36px; height: 36px; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.8rem;}
         .avatar.teacher { background: #34C759; } 
         .card-body { padding: 15px; font-size: 0.95rem; line-height: 1.6; }
-        .comments-area { background: #f9f9f9; padding: 15px; }
-        .comment-list { list-style: none; padding: 0; margin: 0 0 15px 0; }
-        .comment-item { display: flex; margin-bottom: 10px; }
-        .comment-bubble { background: #fff; padding: 8px 14px; border-radius: 16px; border: 1px solid #e5e5ea; margin-left: 8px; flex: 1; font-size: 0.9rem; }
-        .input-box { display: flex; gap: 8px; }
-        .input-box input { flex: 1; padding: 10px 15px; border: 1px solid #c6c6c8; border-radius: 20px; outline: none; font-size: 16px; }
-        .input-box button { background: var(--primary); color: white; border: none; padding: 0 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .input-box { display: flex; gap: 8px; padding: 15px; background: #f9f9f9; }
+        .input-box input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; }
+        .input-box button { background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 20px; cursor: pointer; }
 
         /* --- ポップアップ --- */
         #popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; }
-        #popup-card { background: white; width: 80%; max-width: 300px; padding: 25px; border-radius: 16px; text-align: center; }
-        .audio-btn { background: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+        #popup-card { background: white; width: 80%; max-width: 300px; padding: 25px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
     </style>
 </head>
@@ -116,32 +122,35 @@
         <div id="tab-paper" class="active">
             <h2>The First Story</h2>
             <div id="readable-text">
-                <p>I am honored to be with you today at your <span class="w" onclick="showPopup('commencement', '卒業式')">commencement</span> from one of the finest universities in the world.</p>
+                <p>I am honored to be with you today at your <span class="w" id="ref-commencement" onclick="showPopup('commencement', '卒業式')">commencement</span> from one of the finest universities in the world.</p>
                 <p>I never graduated from college. Truth be told, this is the closest I've ever gotten to a college graduation. Today I want to tell you three stories from my life. That's it. No big deal. Just three stories.</p>
                 <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
                 <p>The first story is about <strong>connecting the dots</strong>.</p>
-                <p>I <span class="w" onclick="showPopup('dropped out', '中退した')">dropped out</span> of Reed College after the first 6 months, but then stayed around as a <span class="w" onclick="showPopup('drop-in', '聴講生')">drop-in</span> for another 18 months or so before I really quit.</p>
+                <p>I <span class="w" id="ref-dropped-out" onclick="showPopup('dropped out', '中退した')">dropped out</span> of <span class="w" id="ref-reed" onclick="showPopup('Reed College', 'リード大学')">Reed College</span> after the first 6 months, but then stayed around as a <span class="w" id="ref-drop-in" onclick="showPopup('drop-in', '聴講生')">drop-in</span> for another 18 months or so before I really quit.</p>
                 <p>So why did I drop out?</p>
-                <p>It started before I was born. My <span class="w" onclick="showPopup('biological mother', '生みの母')">biological mother</span> was a young, unwed college graduate student, and she decided to put me up for <span class="w" onclick="showPopup('adoption', '養子縁組')">adoption</span>.</p>
-                <p>17 years later I did go to college. But I <span class="w" onclick="showPopup('naively', '世間知らずに')">naively</span> chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college <span class="w" onclick="showPopup('tuition', '授業料')">tuition</span>.</p>
+                <p>It started before I was born. My <span class="w" id="ref-biological" onclick="showPopup('biological mother', '生みの母')">biological mother</span> was a young, unwed college graduate student, and she decided to put me up for <span class="w" id="ref-adoption" onclick="showPopup('adoption', '養子縁組')">adoption</span>.</p>
+                <p>17 years later I did go to college. But I <span class="w" id="ref-naively" onclick="showPopup('naively', '世間知らずに')">naively</span> chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college <span class="w" id="ref-tuition" onclick="showPopup('tuition', '授業料')">tuition</span>.</p>
                 <p>After six months, I couldn't see the value in it. I had no idea what I wanted to do with my life and no idea how college was going to help me figure it out. And here I was spending all of the money my parents had saved their entire life.</p>
                 <p>So I decided to drop out and trust that it would all work out OK. It was pretty scary at the time, but looking back it was one of the best decisions I ever made.</p>
-                <p>You can't <span class="w" onclick="showPopup('connect the dots', '点と点をつなぐ')">connect the dots</span> looking forward; you can only connect them looking backward. So you have to trust that the dots will somehow connect in your future.</p>
+                <p>You can't <span class="w" id="ref-connect" onclick="showPopup('connect the dots', '点と点をつなぐ')">connect the dots</span> looking forward; you can only connect them looking backward. So you have to <span class="w" id="ref-trust" onclick="showPopup('trust', '信じる')">trust</span> that the dots will <span class="w" id="ref-somehow" onclick="showPopup('somehow', 'どうにかして')">somehow</span> connect in your future.</p>
             </div>
             <br><br><br>
         </div>
 
         <div id="tab-words">
-            <div class="words-controls">
+            <div class="words-toolbar">
+                <button class="filter-btn" id="filter-fav-btn" onclick="toggleFilterFav()">
+                    <span class="material-icons" style="font-size:16px;">star</span> 苦手のみ
+                </button>
                 <button class="red-sheet-btn" onclick="toggleRedSheet()" id="red-sheet-btn">
-                    <span class="material-icons">visibility_off</span> 赤シート
+                    <span class="material-icons" style="font-size:16px;">visibility_off</span> 赤シート
                 </button>
             </div>
-            <ul class="word-list" id="word-list-container"></ul>
+            <ul class="word-list" id="word-list-container">
+                </ul>
         </div>
 
         <div id="tab-quiz">
-            <div class="quiz-header">Advanced Level: Challenge yourself!</div>
             <div id="quiz-container">Loading...</div>
             <br><br>
         </div>
@@ -167,122 +176,47 @@
         <div id="popup-card" onclick="event.stopPropagation()">
             <span id="popup-word" style="font-size:1.8rem; font-weight:bold; display:block;">Word</span>
             <span id="popup-mean" style="color:#666; display:block; margin-bottom:20px;">Meaning</span>
-            <button class="audio-btn" onclick="playCurrentWord()"><span class="material-icons">volume_up</span></button>
-            <br><button style="border:none; background:none; color:#999; margin-top:20px; text-decoration:underline;" onclick="closePopup()">Close</button>
+            <button class="ctrl-btn main" style="margin:0 auto;" onclick="playCurrentWord()"><span class="material-icons">volume_up</span></button>
+            <br><button style="border:none; background:none; color:#999; margin-top:20px; text-decoration:underline; cursor:pointer;" onclick="closePopup()">Close</button>
         </div>
     </div>
 
     <script>
+        // ★★★ Supabase設定 ★★★
         const SUPABASE_URL = "https://olmaivevtfipahmceuji.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sbWFpdmV2dGZpcGFobWNldWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNTM1NTYsImV4cCI6MjA4NTYyOTU1Nn0.7RlnISpA9VEWXPMmz0L94l2lCemiXjHblXW8BPI_YP8";   
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 0. データ ---
+        // --- 0. 単語データ (類義語・参照ID付き) ---
+        // refId: 本文中のIDと紐づく。nullの場合はジャンプしない。
         const wordData = [
-            { en: "commencement", pos: "名", ja: "学位授与式" },
-            { en: "deal", pos: "名", ja: "扱い, 処遇; 取引" },
-            { en: "connect", pos: "動", ja: "～をつなぐ, 結びつける" },
-            { en: "dot", pos: "名", ja: "点" },
-            { en: "Reed College", pos: "固名", ja: "リード大学" },
-            { en: "figure", pos: "動", ja: "～だと考える, 結論づける" },
-            { en: "require", pos: "動", ja: "～を必要とする" },
-            { en: "whatever", pos: "形", ja: "どんな～でも" },
-            { en: "calligraphy", pos: "名", ja: "カリグラフィー(西洋書道)" },
-            { en: "serif", pos: "名", ja: "セリフ" },
-            { en: "sans-serif", pos: "名", ja: "サン・セリフ" },
-            { en: "typeface", pos: "名", ja: "字体" },
-            { en: "combination", pos: "名", ja: "組み合わせ" },
-            { en: "typography", pos: "名", ja: "印刷デザイン" },
-            { en: "historical", pos: "形", ja: "歴史的な" },
-            { en: "artistically", pos: "副", ja: "芸術的に" },
-            { en: "subtle", pos: "形", ja: "繊細な" },
-            { en: "none", pos: "代", ja: "どれも～ない" },
-            { en: "practical", pos: "形", ja: "実用的な, 実際の" },
-            { en: "Macintosh", pos: "固名", ja: "マック(マッキントッシュ)" },
-            { en: "backwards", pos: "副", ja: "後ろへ" },
-            { en: "trust", pos: "動", ja: "～を信じる" },
-            { en: "somehow", pos: "副", ja: "どうにかして" },
-            { en: "devastating", pos: "形", ja: "衝撃的な" },
-            { en: "successful", pos: "形", ja: "成功した" },
-            { en: "animation", pos: "名", ja: "アニメーション" },
-            { en: "studio", pos: "名", ja: "スタジオ" },
-            { en: "remarkable", pos: "形", ja: "驚くべき" },
-            { en: "satisfied", pos: "形", ja: "満足している" },
-            { en: "settle", pos: "動", ja: "落ち着く" },
-            { en: "fortunately", pos: "副", ja: "幸運にも" },
-            { en: "surgery", pos: "名", ja: "手術" },
-            { en: "certainty", pos: "名", ja: "確信" },
-            { en: "drown", pos: "動", ja: "～(声・音)をかき消す" },
-            { en: "importantly", pos: "副", ja: "重要なことには" },
-            { en: "intuition", pos: "名", ja: "直観" },
-            { en: "secondary", pos: "形", ja: "二次的な" },
-            { en: "publication", pos: "名", ja: "出版物" },
-            { en: "issue", pos: "名", ja: "(雑誌・新聞などの)号" }
-        ];
-
-        // --- 難問クイズ10問 ---
-        const quizzes = [
-            { 
-                q: "What is the irony in 'this is the closest I've ever gotten to a college graduation'?", 
-                options: ["He graduated secretly.", "He is a dropout speaking at a graduation.", "He hates graduations.", "He went to a wrong college."], 
-                ans: 1,
-                reason: "大学を中退した彼が、名門大学の卒業式でスピーチをしているという状況が皮肉（irony）です。"
-            },
-            { 
-                q: "Why did Jobs describe his college choice as 'naive'?", 
-                options: ["It was too far.", "It was too expensive for his parents.", "It was too difficult.", "He didn't like the major."], 
-                ans: 1,
-                reason: "労働者階級の両親の貯金をすべて高額な授業料（tuition）に使ってしまったためです。"
-            },
-            { 
-                q: "What does 'connecting the dots' imply?", 
-                options: ["Plan every step carefully.", "Life events make sense only when looking back.", "Network with many people.", "Destiny cannot be changed."], 
-                ans: 1,
-                reason: "未来を見て点をつなぐことはできず、後で振り返った時（looking backward）に初めて意味がわかると述べています。"
-            },
-            { 
-                q: "What was a direct result of dropping out?", 
-                options: ["He stopped all studying.", "He stopped required classes and took interesting ones.", "He started Apple immediately.", "He got a full-time job."], 
-                ans: 1,
-                reason: "中退することで必修科目をやめ、興味のあるカリグラフィーなどの授業に潜り込む（drop-in）ことができました。"
-            },
-            { 
-                q: "Why did he take the calligraphy class?", 
-                options: ["For future computer design.", "It was required.", "Out of curiosity and intuition.", "A friend told him to."], 
-                ans: 2,
-                reason: "当時は実用性は考えておらず、歴史的・芸術的な美しさへの好奇心から受講しました。"
-            },
-            { 
-                q: "What does 'It wasn't all romantic' mean?", 
-                options: ["He had no girlfriend.", "He faced hardships like sleeping on floors.", "He disliked Art.", "The campus was ugly."], 
-                ans: 1,
-                reason: "「ロマンチックな話ばかりではない」＝床で寝たり、食事のためにコーラの瓶を集めたりした苦労を指します。"
-            },
-            { 
-                q: "How did calligraphy influence the Macintosh?", 
-                options: ["The physical shape.", "It brought beautiful typography to computers.", "The coding style.", "The marketing."], 
-                ans: 1,
-                reason: "マックは美しいフォント（typography）を持つ最初のコンピュータとなりました。"
-            },
-            { 
-                q: "According to Jobs, you have to trust that...", 
-                options: ["The dots will connect in your future.", "You will be rich.", "College is important.", "Technology saves the world."], 
-                ans: 0,
-                reason: "「点はいずれ将来つながる」と信じることが、心に従う自信を与えてくれると説いています。"
-            },
-            { 
-                q: "What does 'drop out' represent in his path?", 
-                options: ["Staying on the safe path.", "Diverging from the standard path.", "Connecting people.", "Giving up on life."], 
-                ans: 1,
-                reason: "レール（標準的な進路）から外れることを意味します。"
-            },
-            { 
-                q: "What is the main message of this first story?", 
-                options: ["College is a waste.", "Learn calligraphy.", "Seemingly unrelated experiences have meaning later.", "Adoption is hard."], 
-                ans: 2,
-                reason: "一見関係ない経験（点）が、将来どうつながるかを信じて進むことの重要性がテーマです。"
-            }
+            { en: "commencement", pos: "名", ja: "学位授与式", syn: "graduation", refId: "ref-commencement" },
+            { en: "deal", pos: "名", ja: "取引, 扱い", syn: "agreement, transaction", refId: null },
+            { en: "connect", pos: "動", ja: "～をつなぐ", syn: "link, join", refId: "ref-connect" },
+            { en: "dot", pos: "名", ja: "点", syn: "point, spot", refId: "ref-connect" },
+            { en: "drop out", pos: "句", ja: "中退する", syn: "quit, leave", refId: "ref-dropped-out" },
+            { en: "drop-in", pos: "名", ja: "（授業への）潜り込み, 聴講生", syn: "visitor", refId: "ref-drop-in" },
+            { en: "Reed College", pos: "名", ja: "リード大学（オレゴンの名門大）", syn: null, refId: "ref-reed" },
+            { en: "figure out", pos: "句", ja: "理解する, 解決する", syn: "understand, solve", refId: null },
+            { en: "require", pos: "動", ja: "～を必要とする", syn: "need, demand", refId: null },
+            { en: "biological", pos: "形", ja: "生物学的な, 血のつながった", syn: "natural, genetic", refId: "ref-biological" },
+            { en: "adoption", pos: "名", ja: "養子縁組", syn: "fostering", refId: "ref-adoption" },
+            { en: "naively", pos: "副", ja: "世間知らずに, 無邪気に", syn: "innocently", refId: "ref-naively" },
+            { en: "tuition", pos: "名", ja: "授業料", syn: "school fee", refId: "ref-tuition" },
+            { en: "calligraphy", pos: "名", ja: "カリグラフィー(西洋書道)", syn: "penmanship", refId: null },
+            { en: "serif", pos: "名", ja: "セリフ（書体のひげ飾り）", syn: null, refId: null },
+            { en: "sans-serif", pos: "名", ja: "サン・セリフ（飾りのない書体）", syn: null, refId: null },
+            { en: "typeface", pos: "名", ja: "書体", syn: "font", refId: null },
+            { en: "typography", pos: "名", ja: "印刷デザイン, 植字法", syn: null, refId: null },
+            { en: "practical", pos: "形", ja: "実用的な", syn: "useful, pragmatic", refId: null },
+            { en: "trust", pos: "動", ja: "～を信じる", syn: "believe, rely on", refId: "ref-trust" },
+            { en: "somehow", pos: "副", ja: "どうにかして, なぜか", syn: "in some way", refId: "ref-somehow" },
+            { en: "devastating", pos: "形", ja: "衝撃的な, 破壊的な", syn: "shocking, destructive", refId: null },
+            { en: "successful", pos: "形", ja: "成功した", syn: "prosperous", refId: null },
+            { en: "satisfied", pos: "形", ja: "満足している", syn: "content, pleased", refId: null },
+            { en: "settle", pos: "動", ja: "妥協する, 定住する", syn: "compromise", refId: null },
+            { en: "intuition", pos: "名", ja: "直観", syn: "instinct", refId: null }
         ];
 
         // --- 1. 音声処理 (ネイティブ優先) ---
@@ -346,44 +280,120 @@
             }
         }
 
-        // --- 2. 単語帳・赤シート ---
+        // --- 2. 高機能単語帳 (類義語・ジャンプ・お気に入り) ---
+        let favorites = JSON.parse(localStorage.getItem('vocab_favs')) || {}; // { "word": true }
+        let isFavFilterActive = false;
+        let isRedSheetActive = false;
+
         function renderWords() {
             const container = document.getElementById('word-list-container');
             container.innerHTML = '';
+            
             wordData.forEach(item => {
+                // フィルタ適用
+                if (isFavFilterActive && !favorites[item.en]) return;
+
+                const isFav = favorites[item.en] ? 'checked' : '';
+                const synHtml = item.syn ? `<div class="syn-row"><span class="syn-tag">Syn</span> ${item.syn}</div>` : '';
+                const jumpBtn = item.refId ? 
+                    `<button class="mini-btn" onclick="jumpToContext('${item.refId}')" title="本文で見る"><span class="material-icons" style="font-size:16px;">manage_search</span></button>` : 
+                    `<button class="mini-btn" disabled style="opacity:0.3; cursor:default;"><span class="material-icons" style="font-size:16px;">manage_search</span></button>`;
+
                 const li = document.createElement('li');
                 li.className = 'word-item';
                 li.innerHTML = `
-                    <div class="word-info">
-                        <div class="en">${item.en} <span class="pos">${item.pos}</span></div>
-                        <div class="ja" onclick="revealWord(this)">${item.ja}</div>
+                    <span class="material-icons star-check ${isFav}" onclick="toggleFav(this, '${item.en.replace(/'/g, "\\'")}')">
+                        ${favorites[item.en] ? 'star' : 'star_border'}
+                    </span>
+                    <div class="word-content">
+                        <div class="en-row">
+                            <span class="en">${item.en}</span>
+                            <span class="pos">${item.pos}</span>
+                        </div>
+                        <div class="ja-row">
+                            <span class="ja" onclick="revealWord(this)">${item.ja}</span>
+                            ${synHtml}
+                        </div>
                     </div>
-                    <button class="play-mini" onclick="speakOne('${item.en.replace(/'/g, "\\'")}')"><span class="material-icons">volume_up</span></button>
+                    <div class="word-actions">
+                        <button class="mini-btn play" onclick="speakOne('${item.en.replace(/'/g, "\\'")}')"><span class="material-icons" style="font-size:18px;">volume_up</span></button>
+                        ${jumpBtn}
+                    </div>
                 `;
                 container.appendChild(li);
             });
+            
+            // 赤シートの状態を維持
+            const list = document.getElementById('word-list-container');
+            if(isRedSheetActive) list.classList.add('red-sheet-mode');
+            else list.classList.remove('red-sheet-mode');
         }
 
-        let isRedSheetActive = false;
+        // お気に入りトグル
+        function toggleFav(el, word) {
+            if (favorites[word]) {
+                delete favorites[word];
+                el.innerText = 'star_border';
+                el.classList.remove('checked');
+            } else {
+                favorites[word] = true;
+                el.innerText = 'star';
+                el.classList.add('checked');
+            }
+            localStorage.setItem('vocab_favs', JSON.stringify(favorites));
+            // フィルタ中なら即座にリスト再描画
+            if(isFavFilterActive) renderWords();
+        }
+
+        // フィルタ切り替え
+        function toggleFilterFav() {
+            isFavFilterActive = !isFavFilterActive;
+            const btn = document.getElementById('filter-fav-btn');
+            if(isFavFilterActive) {
+                btn.classList.add('active');
+                btn.innerHTML = '<span class="material-icons" style="font-size:16px;">star</span> 苦手のみ中';
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '<span class="material-icons" style="font-size:16px;">star</span> 苦手のみ';
+            }
+            renderWords();
+        }
+
+        // 文脈ジャンプ機能
+        function jumpToContext(refId) {
+            if(!refId) return;
+            // 1. Paperタブへ切り替え
+            switchTab('paper');
+            // 2. スクロール＆ハイライト
+            setTimeout(() => {
+                const target = document.getElementById(refId);
+                if(target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    target.classList.add('highlight-flash');
+                    setTimeout(() => target.classList.remove('highlight-flash'), 2000);
+                }
+            }, 100);
+        }
+
+        // 赤シート
         function toggleRedSheet() {
             isRedSheetActive = !isRedSheetActive;
             const btn = document.getElementById('red-sheet-btn');
-            const list = document.getElementById('word-list-container');
             if (isRedSheetActive) {
                 btn.classList.add('active');
-                btn.innerHTML = '<span class="material-icons">visibility</span> 答えを見る';
-                list.classList.add('red-sheet-mode');
-                document.querySelectorAll('.ja.revealed').forEach(el => el.classList.remove('revealed'));
+                btn.innerHTML = '<span class="material-icons" style="font-size:16px;">visibility</span> 答えを見る';
             } else {
                 btn.classList.remove('active');
-                btn.innerHTML = '<span class="material-icons">visibility_off</span> 赤シート';
-                list.classList.remove('red-sheet-mode');
+                btn.innerHTML = '<span class="material-icons" style="font-size:16px;">visibility_off</span> 赤シート';
             }
+            renderWords(); // クラス適用のために再描画
         }
+
         function revealWord(element) {
             if (isRedSheetActive) element.classList.toggle('revealed');
         }
 
+        // 単語再生
         window.speakOne = (text) => {
             if(isPlaying) return; 
             const u = new SpeechSynthesisUtterance(text);
@@ -393,15 +403,15 @@
             speechSynthesis.speak(u);
         }
 
-        window.showPopup = (word, mean) => {
-            document.getElementById('popup-word').innerText = word;
-            document.getElementById('popup-mean').innerText = mean;
-            document.getElementById('popup-overlay').style.display = 'flex';
-        }
-        window.closePopup = () => document.getElementById('popup-overlay').style.display = 'none';
-        window.playCurrentWord = () => speakOne(document.getElementById('popup-word').innerText);
+        // --- 3. クイズ (ハイレベル) ---
+        const quizzes = [
+            { q: "What is the irony in 'this is the closest I've ever gotten to a college graduation'?", options: ["He graduated secretly.", "He is a dropout speaking at a graduation.", "He hates graduations."], ans: 1, reason: "中退した自分が卒業式でスピーチしている状況が皮肉です。" },
+            { q: "Why did Jobs describe his college choice as 'naive'?", options: ["It was too far.", "It consumed his parents' savings.", "It was too hard."], ans: 1, reason: "労働者階級の両親の貯金をすべて授業料に使ってしまったため。" },
+            { q: "What does 'connecting the dots' imply?", options: ["Plan carefully.", "Life events make sense only looking backward.", "Network with people."], ans: 1, reason: "未来を見て点をつなぐことはできず、振り返って初めてわかると説いています。" },
+            { q: "What did dropping out allow him to do?", options: ["Stop studying.", "Drop in on interesting classes like calligraphy.", "Start Apple."], ans: 1, reason: "必修をやめて、興味のある授業（カリグラフィー）に潜り込みました。" },
+            { q: "How did calligraphy influence the Macintosh?", options: ["Beautiful typography.", "The coding style.", "The marketing."], ans: 0, reason: "Macは美しいフォント機能を持つ最初のコンピュータになりました。" }
+        ];
 
-        // --- 3. クイズ機能 (拡張版) ---
         function renderQuiz() {
             const container = document.getElementById('quiz-container');
             container.innerHTML = '';
@@ -425,32 +435,20 @@
             const radios = document.getElementsByName(`q${idx}`);
             let val = -1;
             radios.forEach(r => { if(r.checked) val = parseInt(r.value); });
-            
             const resBox = document.getElementById(`res-${idx}`);
             resBox.style.display = 'block';
-            
-            if(val === -1) {
-                resBox.innerText = "Please select an answer.";
-                resBox.style.background = '#eee';
-                resBox.style.color = '#333';
-                return;
-            }
-
             if(val === item.ans) {
-                resBox.style.background = '#d4edda';
-                resBox.style.color = '#155724';
-                resBox.innerHTML = `Correct! 🎉<br><span style="font-size:0.85rem; font-weight:normal;">${item.reason}</span>`;
+                resBox.style.background = '#d4edda'; resBox.style.color = '#155724';
+                resBox.innerHTML = `Correct! 🎉<br><span style="font-size:0.85rem;">${item.reason}</span>`;
             } else {
-                resBox.style.background = '#f8d7da';
-                resBox.style.color = '#721c24';
+                resBox.style.background = '#f8d7da'; resBox.style.color = '#721c24';
                 resBox.innerText = "Try again...";
             }
         }
 
         // --- 4. SNS ---
         const discussions = [
-            { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Deep Think】もしジョブズが大学を中退していなかったら、世界はどうなっていたと思いますか？' },
-            { id: 'q2', author: 'Mr. Tanaka', role: 'teacher', text: 'あなたの人生における「Connecting the dots」の経験はありますか？' }
+            { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Deep Think】もしジョブズが大学を中退していなかったら、世界はどうなっていたと思いますか？' }
         ];
 
         async function initSNS() {
@@ -462,40 +460,49 @@
                 card.innerHTML = `
                     <div class="card-header"><div class="avatar ${post.role}">${post.author[0]}</div><div><b>${post.author}</b></div></div>
                     <div class="card-body">${post.text}</div>
-                    <div class="comments-area">
-                        <ul class="comment-list" id="list-${post.id}"></ul>
+                    <div class="comments-area" style="background:#f9f9f9; padding:15px;">
+                        <ul class="comment-list" id="list-${post.id}" style="list-style:none; padding:0; margin-bottom:10px;"></ul>
                         <div class="input-box"><input type="text" id="input-${post.id}" placeholder="回答..."><button onclick="send('${post.id}')">送信</button></div>
                     </div>
                 `;
                 feed.appendChild(card);
                 loadComments(post.id);
             }
-            db.channel('room1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => {
-                  loadComments(payload.new.post_id);
-            }).subscribe();
+            db.channel('room1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => { loadComments(payload.new.post_id); }).subscribe();
         }
 
         async function loadComments(postId) {
             const { data } = await db.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
-            if(!data) return;
-            const list = document.getElementById(`list-${postId}`);
-            list.innerHTML = '';
-            data.forEach(c => {
-                const li = document.createElement('li');
-                li.className = 'comment-item';
-                li.innerHTML = `<div class="avatar" style="width:28px; height:28px; font-size:0.7rem; background:#FF9500;">St</div><div class="comment-bubble"><span class="comment-name">Student</span>${c.content}</div>`;
-                list.appendChild(li);
-            });
+            if(data) {
+                const list = document.getElementById(`list-${postId}`);
+                list.innerHTML = '';
+                data.forEach(c => {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = "8px";
+                    li.innerHTML = `<span style="font-weight:bold; font-size:0.8rem; color:#007AFF;">Student:</span> ${c.content}`;
+                    list.appendChild(li);
+                });
+            }
         }
 
         async function send(postId) {
             const input = document.getElementById(`input-${postId}`);
-            if(!input.value) return;
-            await db.from('comments').insert([{ post_id: postId, content: input.value }]);
-            input.value = '';
+            if(input.value) {
+                await db.from('comments').insert([{ post_id: postId, content: input.value }]);
+                input.value = '';
+            }
         }
 
-        // --- 共通 ---
+        // ポップアップ
+        window.showPopup = (word, mean) => {
+            document.getElementById('popup-word').innerText = word;
+            document.getElementById('popup-mean').innerText = mean;
+            document.getElementById('popup-overlay').style.display = 'flex';
+        }
+        window.closePopup = () => document.getElementById('popup-overlay').style.display = 'none';
+        window.playCurrentWord = () => speakOne(document.getElementById('popup-word').innerText);
+
+        // タブ切り替え
         window.switchTab = (name) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('div[id^="tab-"]').forEach(d => d.classList.remove('active'));
@@ -510,6 +517,7 @@
             }
         }
 
+        // 初期化
         initSNS();
         renderQuiz();
         renderWords();
