@@ -3,54 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story 1 - Class Discussion</title>
+    <title>Steve Jobs - Story 1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <style>
         /* --- デザイン設定 --- */
-        :root { --primary: #4A90E2; --accent: #FF5252; --bg: #F0F2F5; --paper-bg: #FFF9F0; }
-        body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: var(--bg); margin: 0; padding-bottom: 80px; color: #333; }
-        header { background: #fff; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        h1 { margin: 0; font-size: 1.2rem; color: #333; }
-
-        /* タブナビゲーション */
-        .tab-nav { display: flex; background: #fff; margin-top: 1px; }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; }
+        :root { --primary: #007AFF; --bg: #F2F2F7; --paper: #FFF; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: #1c1c1e; }
+        
+        /* ヘッダーとタブ */
+        header { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #c6c6c8; position: sticky; top: 0; z-index: 100; }
+        .tab-nav { display: flex; background: #fff; padding: 5px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #8e8e93; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .tab-btn .material-icons { vertical-align: middle; margin-right: 5px; font-size: 1.2rem;}
+        .tab-btn .material-icons { vertical-align: bottom; margin-right: 4px; font-size: 1.2rem;}
 
-        /* コンテナ */
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .container { max-width: 700px; margin: 0 auto; padding: 15px; }
 
         /* --- Tab 1: Paper (本文) --- */
-        #tab-paper { background: var(--paper-bg); padding: 25px; border-radius: 8px; line-height: 1.8; font-family: "Georgia", serif; display: none; }
+        #tab-paper { background: var(--paper); padding: 30px; border-radius: 12px; line-height: 2.0; font-family: "Georgia", serif; font-size: 1.05rem; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         #tab-paper.active { display: block; }
+        /* クリックできる単語 */
+        .w { color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(0,122,255,0.3); }
+        .w:active { background: yellow; }
 
         /* --- Tab 2: SNS (議論) --- */
         #tab-sns { display: none; }
         #tab-sns.active { display: block; }
-
-        /* SNSカード */
-        .sns-card { background: #fff; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .card-header { padding: 15px; display: flex; align-items: center; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-        .avatar.teacher { background: #4CAF50; } 
-        .avatar.student { background: #FF9800; } 
-
-        .card-body { padding: 0 15px 15px 15px; font-size: 1rem; line-height: 1.5; }
-
-        /* コメントエリア */
-        .comments-area { background: #f9f9f9; padding: 15px; border-top: 1px solid #f0f0f0; }
+        .sns-card { background: #fff; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card-header { padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.8rem;}
+        .avatar.teacher { background: #34C759; } 
+        .card-body { padding: 15px; font-size: 0.95rem; line-height: 1.6; }
+        .comments-area { background: #f9f9f9; padding: 15px; }
         .comment-list { list-style: none; padding: 0; margin: 0 0 15px 0; }
-        .comment-item { display: flex; margin-bottom: 10px; }
-        .comment-bubble { background: #fff; padding: 8px 12px; border-radius: 12px; border: 1px solid #eee; margin-left: 8px; flex: 1; font-size: 0.9rem; }
-        .comment-name { font-weight: bold; font-size: 0.8rem; color: #555; display: block; margin-bottom: 2px;}
-
-        /* 入力フォーム */
+        .comment-item { display: flex; margin-bottom: 10px; animation: fadeIn 0.3s; }
+        .comment-bubble { background: #fff; padding: 8px 14px; border-radius: 16px; border: 1px solid #e5e5ea; margin-left: 8px; flex: 1; font-size: 0.9rem; }
         .input-box { display: flex; gap: 8px; }
-        .input-box input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        .input-box button { background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        .input-box input { flex: 1; padding: 10px 15px; border: 1px solid #c6c6c8; border-radius: 20px; outline: none; font-size: 16px; } /* iOSでズームしない設定 */
+        .input-box button { background: var(--primary); color: white; border: none; padding: 0 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+
+        /* --- Tab 3: Words (単語帳) --- */
+        #tab-words { display: none; }
+        #tab-words.active { display: block; }
+        .word-list { list-style: none; padding: 0; background: white; border-radius: 12px; overflow: hidden; }
+        .word-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .word-item:last-child { border-bottom: none; }
+        .en { font-weight: bold; font-size: 1.1rem; color: #333; }
+        .ja { color: #666; font-size: 0.9rem; }
+        .play-btn { background: none; border: 1px solid #007AFF; color: #007AFF; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
@@ -58,42 +62,85 @@
     <header><h1>Story 1: Connecting the Dots</h1></header>
 
     <nav class="tab-nav">
-        <button class="tab-btn" onclick="switchTab('paper')" id="btn-paper">
-            <span class="material-icons">article</span> Paper
+        <button class="tab-btn active" onclick="switchTab('paper')" id="btn-paper">
+            <span class="material-icons">menu_book</span> Text
         </button>
-        <button class="tab-btn active" onclick="switchTab('sns')" id="btn-sns">
-            <span class="material-icons">forum</span> Discussion
+        <button class="tab-btn" onclick="switchTab('words')" id="btn-words">
+            <span class="material-icons">school</span> Words
+        </button>
+        <button class="tab-btn" onclick="switchTab('sns')" id="btn-sns">
+            <span class="material-icons">forum</span> Class
         </button>
     </nav>
 
     <div class="container">
-        <div id="tab-paper">
+        
+        <div id="tab-paper" class="active">
             <h2>The First Story</h2>
-            <p>I am honored to be with you today at your commencement from one of the finest universities in the world...</p>
-            <p>(ここに教科書の全文が入ります)</p>
+            <p>I am honored to be with you today at your <span class="w" onclick="mean('卒業式')">commencement</span> from one of the finest universities in the world.</p>
+            <p>I never graduated from college. Truth be told, this is the closest I've ever gotten to a college graduation. Today I want to tell you three stories from my life. That's it. No big deal. Just three stories.</p>
+            <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
+            
+            <p>The first story is about <strong>connecting the dots</strong>.</p>
+            
+            <p>I <span class="w" onclick="mean('中退した')">dropped out</span> of Reed College after the first 6 months, but then stayed around as a <span class="w" onclick="mean('聴講生（単位なしで授業を受ける学生）')">drop-in</span> for another 18 months or so before I really quit.</p>
+            
+            <p>So why did I drop out?</p>
+            
+            <p>It started before I was born. My <span class="w" onclick="mean('生みの〜')">biological</span> mother was a young, unwed college graduate student, and she decided to put me up for <span class="w" onclick="mean('養子縁組')">adoption</span>.</p>
+            
+            <p>(...中略: 養子の話...)</p>
+
+            <p>17 years later I did go to college. But I <span class="w" onclick="mean('無邪気に、世間知らずに')">naively</span> chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college <span class="w" onclick="mean('授業料')">tuition</span>.</p>
+            
+            <p>After six months, I couldn't see the value in it. I had no idea what I wanted to do with my life and no idea how college was going to help me figure it out. And here I was spending all of the money my parents had saved their entire life.</p>
+            
+            <p>So I decided to drop out and trust that it would all work out OK. It was pretty scary at the time, but looking back it was one of the best decisions I ever made.</p>
+            
+            <p>You can't connect the dots looking forward; you can only connect them looking backward. So you have to trust that the dots will somehow connect in your future.</p>
         </div>
 
-        <div id="tab-sns" class="active">
-            <div id="feed">Loading discussion...</div>
+        <div id="tab-words">
+            <ul class="word-list">
+                <li class="word-item"><span class="en">commencement</span> <span class="ja">卒業式、開始</span></li>
+                <li class="word-item"><span class="en">drop out</span> <span class="ja">中退する</span></li>
+                <li class="word-item"><span class="en">drop-in</span> <span class="ja">（ふらっと立ち寄る）聴講生</span></li>
+                <li class="word-item"><span class="en">biological mother</span> <span class="ja">生みの母</span></li>
+                <li class="word-item"><span class="en">adoption</span> <span class="ja">養子縁組</span></li>
+                <li class="word-item"><span class="en">naively</span> <span class="ja">単純に、世間知らずに</span></li>
+                <li class="word-item"><span class="en">tuition</span> <span class="ja">授業料</span></li>
+                <li class="word-item"><span class="en">connect the dots</span> <span class="ja">点と点をつなぐ</span></li>
+            </ul>
+            <p style="text-align:center; color:#888; margin-top:20px;">Textタブの青い文字をタップしても意味が出ます。</p>
+        </div>
+
+        <div id="tab-sns">
+            <div id="feed">Loading...</div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // ★★★ ここに正しい情報を入れてください ★★★
-        const SUPABASE_URL ="https://olmaivevtfipahmceuji.supabase.co"; 
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sbWFpdmV2dGZpcGFobWNldWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNTM1NTYsImV4cCI6MjA4NTYyOTU1Nn0.7RlnISpA9VEWXPMmz0L94l2lCemiXjHblXW8BPI_YP8";   
+        // ★★★ ここに URL と KEY を入れてください！！ ★★★
+        const SUPABASE_URL = "https://xxxxxxxx.supabase.co"; 
+        const SUPABASE_KEY = "eyJxxxxxxxxxxxxxxxxxx...";   
         // ==========================================
 
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 先生の投稿データ（親投稿）
+        // --- 単語の意味ポップアップ ---
+        window.mean = (text) => {
+            alert("意味: " + text);
+        }
+
+        // --- SNSデータ ---
         const discussions = [
-            { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Question】\nなぜジョブズは大学を中退したのですか？理由を書いてください。' },
-            { id: 'q2', author: 'Steve Jobs', role: 'student', text: 'You can\'t connect the dots looking forward; you can only connect them looking backward.' }
+            { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Q1】なぜジョブズは大学を中退したのですか？本文から理由を探してみましょう。' },
+            { id: 'q2', author: 'Mr. Tanaka', role: 'teacher', text: '【Q2】"Connecting the dots" とは、ジョブズの人生においてどういう意味でしたか？' }
         ];
 
+        // --- 初期化 ---
         async function init() {
             const feed = document.getElementById('feed');
             feed.innerHTML = '';
@@ -106,11 +153,11 @@
                         <div class="avatar ${post.role}">${post.author[0]}</div>
                         <div><b>${post.author}</b></div>
                     </div>
-                    <div class="card-body">${post.text.replace(/\n/g, '<br>')}</div>
+                    <div class="card-body">${post.text}</div>
                     <div class="comments-area">
                         <ul class="comment-list" id="list-${post.id}"></ul>
                         <div class="input-box">
-                            <input type="text" id="input-${post.id}" placeholder="コメントを入力...">
+                            <input type="text" id="input-${post.id}" placeholder="回答・コメント...">
                             <button onclick="send('${post.id}')">送信</button>
                         </div>
                     </div>
@@ -119,7 +166,6 @@
                 loadComments(post.id);
             }
 
-            // リアルタイム受信
             db.channel('room1')
               .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => {
                   loadComments(payload.new.post_id);
@@ -130,14 +176,13 @@
         async function loadComments(postId) {
             const { data, error } = await db.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
             if(error) return;
-
             const list = document.getElementById(`list-${postId}`);
             list.innerHTML = '';
             data.forEach(c => {
                 const li = document.createElement('li');
                 li.className = 'comment-item';
                 li.innerHTML = `
-                    <div class="avatar student" style="width:28px; height:28px; font-size:0.7rem; background:#ddd;">User</div>
+                    <div class="avatar" style="width:28px; height:28px; font-size:0.7rem; background:#FF9500;">St</div>
                     <div class="comment-bubble">
                         <span class="comment-name">Student</span>
                         ${c.content}
@@ -149,19 +194,17 @@
 
         async function send(postId) {
             const input = document.getElementById(`input-${postId}`);
-            const text = input.value.trim();
-            if(!text) return;
-
-            const { error } = await db.from('comments').insert([{ post_id: postId, content: text }]);
-            if(error) alert("送信エラー: " + error.message);
-            else input.value = '';
+            if(!input.value) return;
+            await db.from('comments').insert([{ post_id: postId, content: input.value }]);
+            input.value = '';
         }
 
+        // --- タブ切り替え ---
         window.switchTab = (name) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('div[id^="tab-"]').forEach(d => d.classList.remove('active'));
+            
             document.getElementById(`btn-${name}`).classList.add('active');
-            document.getElementById('tab-paper').classList.remove('active');
-            document.getElementById('tab-sns').classList.remove('active');
             document.getElementById(`tab-${name}`).classList.add('active');
         }
 
