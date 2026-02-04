@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steve Jobs - Story 1</title>
+    <title>Steve Jobs - Lesson 1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <style>
-        /* --- デザイン設定 --- */
+        /* --- 基本設定 --- */
         :root { --primary: #007AFF; --bg: #F2F2F7; --paper: #FFF; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: #1c1c1e; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 140px; color: #1c1c1e; }
         
         /* ヘッダー */
         header { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #c6c6c8; position: sticky; top: 0; z-index: 100; }
-        .tab-nav { display: flex; background: #fff; padding: 5px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #8e8e93; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-nav { display: flex; background: #fff; padding: 5px; overflow-x: auto; }
+        .tab-btn { flex: 1; min-width: 80px; padding: 12px; border: none; background: none; font-weight: bold; color: #8e8e93; cursor: pointer; border-bottom: 3px solid transparent; font-size: 0.9rem; white-space: nowrap; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
         .tab-btn .material-icons { vertical-align: bottom; margin-right: 4px; font-size: 1.2rem;}
 
@@ -24,32 +24,40 @@
         /* --- Tab 1: Paper (本文) --- */
         #tab-paper { background: var(--paper); padding: 30px; border-radius: 12px; line-height: 2.0; font-family: "Georgia", serif; font-size: 1.05rem; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         #tab-paper.active { display: block; }
-        
-        /* ★クリックできる単語のデザイン★ */
         .w { color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(0,122,255,0.3); }
         .w:active { background: yellow; }
 
-        /* --- ポップアップ（単語カード） --- */
-        #popup-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;
+        /* --- 音声プレイヤー（画面下に固定） --- */
+        .audio-player {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px); border-top: 1px solid #ccc; padding: 10px 20px;
+            display: flex; align-items: center; justify-content: space-between; z-index: 300;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: none; /* 初期は非表示 */
         }
-        #popup-card {
-            background: white; width: 80%; max-width: 300px; padding: 25px; border-radius: 16px;
-            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        #popup-word { font-size: 1.8rem; font-weight: bold; color: #333; display: block; margin-bottom: 5px; }
-        #popup-mean { font-size: 1rem; color: #666; margin-bottom: 20px; display: block; }
-        
-        .audio-btn {
-            background: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%;
-            font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto;
-            box-shadow: 0 4px 10px rgba(0,122,255,0.4); transition: 0.2s;
-        }
-        .audio-btn:active { transform: scale(0.9); background: #005bb5; }
-        .close-btn { margin-top: 20px; background: none; border: none; color: #999; text-decoration: underline; cursor: pointer; }
+        .audio-controls { display: flex; align-items: center; gap: 15px; }
+        .ctrl-btn { background: none; border: none; cursor: pointer; color: #333; }
+        .ctrl-btn.main { background: var(--primary); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .speed-box { font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; width: 80px; }
+        .speed-box input { width: 100%; }
 
-        /* --- Tab 2: SNS --- */
+        /* --- Tab 2: Words (単語帳) --- */
+        #tab-words { display: none; }
+        #tab-words.active { display: block; }
+        .word-list { list-style: none; padding: 0; background: white; border-radius: 12px; overflow: hidden; }
+        .word-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .play-mini { border: 1px solid var(--primary); color: var(--primary); width: 32px; height: 32px; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer;}
+
+        /* --- Tab 3: Quiz (問題) --- */
+        #tab-quiz { display: none; }
+        #tab-quiz.active { display: block; }
+        .quiz-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .quiz-q { font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; }
+        .quiz-opt label { display: block; padding: 10px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; cursor: pointer; }
+        .quiz-opt input { margin-right: 10px; }
+        .quiz-result { margin-top: 10px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; }
+        .check-btn { background: #333; color: white; border: none; padding: 8px 16px; border-radius: 20px; margin-top: 5px; cursor: pointer; }
+
+        /* --- Tab 4: SNS --- */
         #tab-sns { display: none; }
         #tab-sns.active { display: block; }
         .sns-card { background: #fff; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -65,17 +73,11 @@
         .input-box input { flex: 1; padding: 10px 15px; border: 1px solid #c6c6c8; border-radius: 20px; outline: none; font-size: 16px; }
         .input-box button { background: var(--primary); color: white; border: none; padding: 0 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-        /* --- Tab 3: Words --- */
-        #tab-words { display: none; }
-        #tab-words.active { display: block; }
-        .word-list { list-style: none; padding: 0; background: white; border-radius: 12px; overflow: hidden; }
-        .word-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .word-item:last-child { border-bottom: none; }
-        .en { font-weight: bold; font-size: 1.1rem; color: #333; }
-        .ja { color: #666; font-size: 0.9rem; }
-        .play-mini { border: 1px solid var(--primary); color: var(--primary); width: 32px; height: 32px; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer;}
+        /* --- ポップアップ --- */
+        #popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; }
+        #popup-card { background: white; width: 80%; max-width: 300px; padding: 25px; border-radius: 16px; text-align: center; }
+        .audio-btn { background: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
 
-        @keyframes popIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
     </style>
 </head>
 <body>
@@ -83,15 +85,10 @@
     <header><h1>Story 1: Connecting the Dots</h1></header>
 
     <nav class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('paper')" id="btn-paper">
-            <span class="material-icons">menu_book</span> Text
-        </button>
-        <button class="tab-btn" onclick="switchTab('words')" id="btn-words">
-            <span class="material-icons">school</span> Words
-        </button>
-        <button class="tab-btn" onclick="switchTab('sns')" id="btn-sns">
-            <span class="material-icons">forum</span> Class
-        </button>
+        <button class="tab-btn active" onclick="switchTab('paper')" id="btn-paper"><span class="material-icons">menu_book</span> Text</button>
+        <button class="tab-btn" onclick="switchTab('words')" id="btn-words"><span class="material-icons">school</span> Words</button>
+        <button class="tab-btn" onclick="switchTab('quiz')" id="btn-quiz"><span class="material-icons">quiz</span> Quiz</button>
+        <button class="tab-btn" onclick="switchTab('sns')" id="btn-sns"><span class="material-icons">forum</span> Class</button>
     </nav>
 
     <div class="container">
@@ -99,43 +96,33 @@
         <div id="tab-paper" class="active">
             <h2>The First Story</h2>
             
-            <p>I am honored to be with you today at your <span class="w" onclick="showPopup('commencement', '卒業式')">commencement</span> from one of the finest universities in the world.</p>
-            
-            <p>I never graduated from college. Truth be told, this is the closest I've ever gotten to a college graduation. Today I want to tell you three stories from my life. That's it. No big deal. Just three stories.</p>
-            <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
-            
-            <p>The first story is about <strong>connecting the dots</strong>.</p>
-            
-            <p>I <span class="w" onclick="showPopup('dropped out', '中退した')">dropped out</span> of Reed College after the first 6 months, but then stayed around as a <span class="w" onclick="showPopup('drop-in', '聴講生（もぐりの学生）')">drop-in</span> for another 18 months or so before I really quit.</p>
-            
-            <p>So why did I drop out?</p>
-            
-            <p>It started before I was born. My <span class="w" onclick="showPopup('biological mother', '生みの母')">biological mother</span> was a young, unwed college graduate student, and she decided to put me up for <span class="w" onclick="showPopup('adoption', '養子縁組')">adoption</span>.</p>
-
-            <p>17 years later I did go to college. But I <span class="w" onclick="showPopup('naively', '世間知らずに、単純に')">naively</span> chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college <span class="w" onclick="showPopup('tuition', '授業料')">tuition</span>.</p>
-            
-            <p>You can't <span class="w" onclick="showPopup('connect the dots', '点と点をつなぐ')">connect the dots</span> looking forward; you can only connect them looking backward.</p>
+            <div id="readable-text">
+                <p>I am honored to be with you today at your <span class="w" onclick="showPopup('commencement', '卒業式')">commencement</span> from one of the finest universities in the world.</p>
+                <p>I never graduated from college. Truth be told, this is the closest I've ever gotten to a college graduation. Today I want to tell you three stories from my life. That's it. No big deal. Just three stories.</p>
+                <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
+                <p>The first story is about <strong>connecting the dots</strong>.</p>
+                <p>I <span class="w" onclick="showPopup('dropped out', '中退した')">dropped out</span> of Reed College after the first 6 months, but then stayed around as a <span class="w" onclick="showPopup('drop-in', '聴講生')">drop-in</span> for another 18 months or so before I really quit.</p>
+                <p>So why did I drop out?</p>
+                <p>It started before I was born. My <span class="w" onclick="showPopup('biological mother', '生みの母')">biological mother</span> was a young, unwed college graduate student, and she decided to put me up for <span class="w" onclick="showPopup('adoption', '養子縁組')">adoption</span>.</p>
+                <p>17 years later I did go to college. But I <span class="w" onclick="showPopup('naively', '世間知らずに')">naively</span> chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college <span class="w" onclick="showPopup('tuition', '授業料')">tuition</span>.</p>
+                <p>After six months, I couldn't see the value in it. I had no idea what I wanted to do with my life and no idea how college was going to help me figure it out. And here I was spending all of the money my parents had saved their entire life.</p>
+                <p>So I decided to drop out and trust that it would all work out OK. It was pretty scary at the time, but looking back it was one of the best decisions I ever made.</p>
+                <p>You can't <span class="w" onclick="showPopup('connect the dots', '点と点をつなぐ')">connect the dots</span> looking forward; you can only connect them looking backward. So you have to trust that the dots will somehow connect in your future.</p>
+            </div>
+            <br><br><br>
         </div>
 
         <div id="tab-words">
             <ul class="word-list">
-                <li class="word-item">
-                    <div><div class="en">commencement</div><div class="ja">卒業式</div></div>
-                    <button class="play-mini" onclick="speak('commencement')"><span class="material-icons">volume_up</span></button>
-                </li>
-                <li class="word-item">
-                    <div><div class="en">drop out</div><div class="ja">中退する</div></div>
-                    <button class="play-mini" onclick="speak('drop out')"><span class="material-icons">volume_up</span></button>
-                </li>
-                <li class="word-item">
-                    <div><div class="en">tuition</div><div class="ja">授業料</div></div>
-                    <button class="play-mini" onclick="speak('tuition')"><span class="material-icons">volume_up</span></button>
-                </li>
-                 <li class="word-item">
-                    <div><div class="en">naively</div><div class="ja">単純に、世間知らずに</div></div>
-                    <button class="play-mini" onclick="speak('naively')"><span class="material-icons">volume_up</span></button>
-                </li>
+                <li class="word-item"><div><div class="en">commencement</div><div class="ja">卒業式</div></div><button class="play-mini" onclick="speakOne('commencement')"><span class="material-icons">volume_up</span></button></li>
+                <li class="word-item"><div><div class="en">drop out</div><div class="ja">中退する</div></div><button class="play-mini" onclick="speakOne('drop out')"><span class="material-icons">volume_up</span></button></li>
+                <li class="word-item"><div><div class="en">tuition</div><div class="ja">授業料</div></div><button class="play-mini" onclick="speakOne('tuition')"><span class="material-icons">volume_up</span></button></li>
+                <li class="word-item"><div><div class="en">naively</div><div class="ja">単純に</div></div><button class="play-mini" onclick="speakOne('naively')"><span class="material-icons">volume_up</span></button></li>
             </ul>
+        </div>
+
+        <div id="tab-quiz">
+            <div id="quiz-container">Loading...</div>
         </div>
 
         <div id="tab-sns">
@@ -143,112 +130,194 @@
         </div>
     </div>
 
+    <div id="audio-player" class="audio-player">
+        <div class="speed-box">
+            <span style="font-size:10px; color:#888;">SPEED</span>
+            <input type="range" id="speed-rate" min="0.5" max="1.5" step="0.1" value="1.0" onchange="changeSpeed()">
+            <span id="speed-val" style="font-size:10px;">1.0x</span>
+        </div>
+        <div class="audio-controls">
+            <button class="ctrl-btn" onclick="stopText()"><span class="material-icons">stop</span></button>
+            <button class="ctrl-btn main" id="play-btn" onclick="togglePlay()"><span class="material-icons">play_arrow</span></button>
+        </div>
+    </div>
+
     <div id="popup-overlay" onclick="closePopup()">
         <div id="popup-card" onclick="event.stopPropagation()">
-            <span id="popup-word">Word</span>
-            <span id="popup-mean">Meaning</span>
-            <br>
-            <button class="audio-btn" onclick="playCurrentWord()">
-                <span class="material-icons">volume_up</span>
-            </button>
-            <br>
-            <button class="close-btn" onclick="closePopup()">Close</button>
+            <span id="popup-word" style="font-size:1.8rem; font-weight:bold; display:block;">Word</span>
+            <span id="popup-mean" style="color:#666; display:block; margin-bottom:20px;">Meaning</span>
+            <button class="audio-btn" onclick="playCurrentWord()"><span class="material-icons">volume_up</span></button>
+            <br><button style="border:none; background:none; color:#999; margin-top:20px; text-decoration:underline;" onclick="closePopup()">Close</button>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // ★★★ 頂いた情報を埋め込みました ★★★
+        // ★★★ 設定済みのキー ★★★
         const SUPABASE_URL = "https://olmaivevtfipahmceuji.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sbWFpdmV2dGZpcGFobWNldWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNTM1NTYsImV4cCI6MjA4NTYyOTU1Nn0.7RlnISpA9VEWXPMmz0L94l2lCemiXjHblXW8BPI_YP8";   
-        // ==========================================
-
+        
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 音声・ポップアップ機能 ---
-        let currentWord = "";
+        // --- 1. テキスト読み上げ機能 ---
+        let utterance = null;
+        let isPlaying = false;
+        let isPaused = false;
 
-        // ポップアップを開く
+        function togglePlay() {
+            if (isPlaying && !isPaused) {
+                // 再生中なら一時停止
+                window.speechSynthesis.pause();
+                isPaused = true;
+                document.getElementById('play-btn').innerHTML = '<span class="material-icons">play_arrow</span>';
+            } else if (isPaused) {
+                // 一時停止中なら再開
+                window.speechSynthesis.resume();
+                isPaused = false;
+                document.getElementById('play-btn').innerHTML = '<span class="material-icons">pause</span>';
+            } else {
+                // 停止中なら最初から再生
+                playText();
+            }
+        }
+
+        function playText() {
+            window.speechSynthesis.cancel(); // 前のをキャンセル
+            
+            // HTMLからテキストを取得（余計なタグを除く）
+            const text = document.getElementById('readable-text').innerText;
+            utterance = new SpeechSynthesisUtterance(text);
+            
+            utterance.lang = 'en-US';
+            utterance.rate = document.getElementById('speed-rate').value;
+            
+            utterance.onend = () => {
+                isPlaying = false;
+                isPaused = false;
+                document.getElementById('play-btn').innerHTML = '<span class="material-icons">play_arrow</span>';
+            };
+
+            window.speechSynthesis.speak(utterance);
+            isPlaying = true;
+            isPaused = false;
+            document.getElementById('play-btn').innerHTML = '<span class="material-icons">pause</span>';
+        }
+
+        function stopText() {
+            window.speechSynthesis.cancel();
+            isPlaying = false;
+            isPaused = false;
+            document.getElementById('play-btn').innerHTML = '<span class="material-icons">play_arrow</span>';
+        }
+
+        function changeSpeed() {
+            const val = document.getElementById('speed-rate').value;
+            document.getElementById('speed-val').innerText = val + "x";
+            // スピードを変えるには一度リセットが必要
+            if(isPlaying) {
+                stopText();
+                playText(); // 新しい速度で再開
+            }
+        }
+
+        // --- 2. 単語再生 (単発) ---
+        let currentWord = "";
         window.showPopup = (word, mean) => {
             currentWord = word;
             document.getElementById('popup-word').innerText = word;
             document.getElementById('popup-mean').innerText = mean;
             document.getElementById('popup-overlay').style.display = 'flex';
         }
-
-        // ポップアップを閉じる
-        window.closePopup = () => {
-            document.getElementById('popup-overlay').style.display = 'none';
+        window.closePopup = () => document.getElementById('popup-overlay').style.display = 'none';
+        window.playCurrentWord = () => speakOne(currentWord);
+        window.speakOne = (text) => {
+            // 長文再生中は邪魔しないように
+            if(isPlaying) return; 
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'en-US';
+            speechSynthesis.speak(u);
         }
 
-        // ポップアップ内の単語を再生
-        window.playCurrentWord = () => {
-            speak(currentWord);
+        // --- 3. クイズ機能 ---
+        const quizzes = [
+            { q: "Where did Steve Jobs give this speech?", options: ["Harvard University", "Stanford University", "Reed College"], ans: 1 },
+            { q: "What is the first story about?", options: ["Love and loss", "Death", "Connecting the dots"], ans: 2 },
+            { q: "Why did he drop out of college?", options: ["It was too expensive", "He got a job", "He failed the exam"], ans: 0 }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            quizzes.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'quiz-card';
+                div.innerHTML = `
+                    <div class="quiz-q">Q${idx+1}. ${item.q}</div>
+                    <div class="quiz-opt">
+                        ${item.options.map((opt, i) => `<label><input type="radio" name="q${idx}" value="${i}"> ${opt}</label>`).join('')}
+                    </div>
+                    <button class="check-btn" onclick="checkQuiz(${idx}, ${item.ans})">Check</button>
+                    <div id="res-${idx}" class="quiz-result"></div>
+                `;
+                container.appendChild(div);
+            });
         }
 
-        // 読み上げエンジン（ブラウザ標準機能）
-        window.speak = (text) => {
-            const uttr = new SpeechSynthesisUtterance(text);
-            uttr.lang = 'en-US'; // 英語モード
-            uttr.rate = 1.0;     // 速度
-            speechSynthesis.speak(uttr);
+        window.checkQuiz = (idx, correctAns) => {
+            const radios = document.getElementsByName(`q${idx}`);
+            let val = -1;
+            radios.forEach(r => { if(r.checked) val = parseInt(r.value); });
+            
+            const resBox = document.getElementById(`res-${idx}`);
+            resBox.style.display = 'block';
+            if(val === correctAns) {
+                resBox.style.background = '#d4edda';
+                resBox.style.color = '#155724';
+                resBox.innerText = "Correct! 🎉";
+            } else {
+                resBox.style.background = '#f8d7da';
+                resBox.style.color = '#721c24';
+                resBox.innerText = "Try again...";
+            }
         }
 
-
-        // --- SNSデータ ---
+        // --- 4. SNS機能 ---
         const discussions = [
             { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Q1】なぜジョブズは大学を中退したのですか？本文から理由を探してみましょう。' },
             { id: 'q2', author: 'Mr. Tanaka', role: 'teacher', text: '【Q2】"Connecting the dots" とは、ジョブズの人生においてどういう意味でしたか？' }
         ];
 
-        async function init() {
+        async function initSNS() {
             const feed = document.getElementById('feed');
             feed.innerHTML = '';
-
             for (let post of discussions) {
                 const card = document.createElement('div');
                 card.className = 'sns-card';
                 card.innerHTML = `
-                    <div class="card-header">
-                        <div class="avatar ${post.role}">${post.author[0]}</div>
-                        <div><b>${post.author}</b></div>
-                    </div>
+                    <div class="card-header"><div class="avatar ${post.role}">${post.author[0]}</div><div><b>${post.author}</b></div></div>
                     <div class="card-body">${post.text}</div>
                     <div class="comments-area">
                         <ul class="comment-list" id="list-${post.id}"></ul>
-                        <div class="input-box">
-                            <input type="text" id="input-${post.id}" placeholder="回答・コメント...">
-                            <button onclick="send('${post.id}')">送信</button>
-                        </div>
+                        <div class="input-box"><input type="text" id="input-${post.id}" placeholder="回答..."><button onclick="send('${post.id}')">送信</button></div>
                     </div>
                 `;
                 feed.appendChild(card);
                 loadComments(post.id);
             }
-
-            db.channel('room1')
-              .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => {
+            db.channel('room1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => {
                   loadComments(payload.new.post_id);
-              })
-              .subscribe();
+            }).subscribe();
         }
 
         async function loadComments(postId) {
-            const { data, error } = await db.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
-            if(error) return;
+            const { data } = await db.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+            if(!data) return;
             const list = document.getElementById(`list-${postId}`);
             list.innerHTML = '';
             data.forEach(c => {
                 const li = document.createElement('li');
                 li.className = 'comment-item';
-                li.innerHTML = `
-                    <div class="avatar" style="width:28px; height:28px; font-size:0.7rem; background:#FF9500;">St</div>
-                    <div class="comment-bubble">
-                        <span class="comment-name">Student</span>
-                        ${c.content}
-                    </div>
-                `;
+                li.innerHTML = `<div class="avatar" style="width:28px; height:28px; font-size:0.7rem; background:#FF9500;">St</div><div class="comment-bubble"><span class="comment-name">Student</span>${c.content}</div>`;
                 list.appendChild(li);
             });
         }
@@ -260,16 +329,25 @@
             input.value = '';
         }
 
-        // タブ切り替え
+        // --- 共通設定 ---
         window.switchTab = (name) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('div[id^="tab-"]').forEach(d => d.classList.remove('active'));
-            
             document.getElementById(`btn-${name}`).classList.add('active');
             document.getElementById(`tab-${name}`).classList.add('active');
+            
+            // Textタブ以外に行ったら音声を止める
+            if(name !== 'paper') {
+                stopText();
+                document.getElementById('audio-player').style.display = 'none';
+            } else {
+                document.getElementById('audio-player').style.display = 'flex';
+            }
         }
 
-        init();
+        // 起動処理
+        initSNS();
+        renderQuiz();
     </script>
 </body>
 </html>
