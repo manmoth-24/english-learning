@@ -9,7 +9,7 @@
     
     <style>
         /* --- 基本設定 --- */
-        :root { --primary: #007AFF; --bg: #F2F2F7; --paper: #FFF; }
+        :root { --primary: #007AFF; --bg: #F2F2F7; --paper: #FFF; --red-sheet: #FF5252; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 140px; color: #1c1c1e; }
         
         /* ヘッダー */
@@ -32,7 +32,7 @@
             position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px); border-top: 1px solid #ccc; padding: 10px 20px;
             display: flex; align-items: center; justify-content: space-between; z-index: 300;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: none; /* 初期は非表示 */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: none;
         }
         .audio-controls { display: flex; align-items: center; gap: 15px; }
         .ctrl-btn { background: none; border: none; cursor: pointer; color: #333; }
@@ -43,9 +43,37 @@
         /* --- Tab 2: Words (単語帳) --- */
         #tab-words { display: none; }
         #tab-words.active { display: block; }
+        
+        /* 赤シート用コントロール */
+        .words-controls { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+        .red-sheet-btn { 
+            background: #fff; border: 1px solid var(--red-sheet); color: var(--red-sheet); 
+            padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;
+            transition: 0.2s;
+        }
+        .red-sheet-btn.active { background: var(--red-sheet); color: white; }
+
         .word-list { list-style: none; padding: 0; background: white; border-radius: 12px; overflow: hidden; }
         .word-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .play-mini { border: 1px solid var(--primary); color: var(--primary); width: 32px; height: 32px; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer;}
+        .word-info { flex: 1; }
+        .en { font-weight: bold; font-size: 1.1rem; color: #333; margin-bottom: 2px; }
+        .pos { font-size: 0.75rem; color: #999; margin-right: 5px; background: #eee; padding: 2px 6px; border-radius: 4px; }
+        .ja { color: #666; font-size: 0.95rem; transition: 0.2s; padding: 2px 5px; border-radius: 4px; }
+        
+        /* 赤シート有効時のスタイル */
+        .red-sheet-mode .ja {
+            background-color: var(--red-sheet);
+            color: var(--red-sheet); /* 文字色も赤にして隠す */
+            cursor: pointer;
+            user-select: none;
+        }
+        /* タップして答えを見る時 */
+        .red-sheet-mode .ja.revealed {
+            background-color: transparent;
+            color: #666;
+        }
+
+        .play-mini { border: 1px solid var(--primary); color: var(--primary); width: 32px; height: 32px; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 10px; flex-shrink: 0;}
 
         /* --- Tab 3: Quiz (問題) --- */
         #tab-quiz { display: none; }
@@ -113,12 +141,13 @@
         </div>
 
         <div id="tab-words">
-            <ul class="word-list">
-                <li class="word-item"><div><div class="en">commencement</div><div class="ja">卒業式</div></div><button class="play-mini" onclick="speakOne('commencement')"><span class="material-icons">volume_up</span></button></li>
-                <li class="word-item"><div><div class="en">drop out</div><div class="ja">中退する</div></div><button class="play-mini" onclick="speakOne('drop out')"><span class="material-icons">volume_up</span></button></li>
-                <li class="word-item"><div><div class="en">tuition</div><div class="ja">授業料</div></div><button class="play-mini" onclick="speakOne('tuition')"><span class="material-icons">volume_up</span></button></li>
-                <li class="word-item"><div><div class="en">naively</div><div class="ja">単純に</div></div><button class="play-mini" onclick="speakOne('naively')"><span class="material-icons">volume_up</span></button></li>
-            </ul>
+            <div class="words-controls">
+                <button class="red-sheet-btn" onclick="toggleRedSheet()" id="red-sheet-btn">
+                    <span class="material-icons">visibility_off</span> 赤シート
+                </button>
+            </div>
+            <ul class="word-list" id="word-list-container">
+                </ul>
         </div>
 
         <div id="tab-quiz">
@@ -159,46 +188,80 @@
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 1. テキスト読み上げ機能 ---
+        // --- 0. 単語データ (画像から抽出) ---
+        const wordData = [
+            { en: "commencement", pos: "名", ja: "学位授与式" },
+            { en: "deal", pos: "名", ja: "扱い, 処遇; 取引" },
+            { en: "connect", pos: "動", ja: "～をつなぐ, 結びつける" },
+            { en: "dot", pos: "名", ja: "点" },
+            { en: "Reed College", pos: "固名", ja: "リード大学" },
+            { en: "figure", pos: "動", ja: "～だと考える, 結論づける" },
+            { en: "require", pos: "動", ja: "～を必要とする" },
+            { en: "whatever", pos: "形", ja: "どんな～でも" },
+            { en: "calligraphy", pos: "名", ja: "カリグラフィー(西洋書道)" },
+            { en: "serif", pos: "名", ja: "セリフ" },
+            { en: "sans-serif", pos: "名", ja: "サン・セリフ" },
+            { en: "typeface", pos: "名", ja: "字体" },
+            { en: "combination", pos: "名", ja: "組み合わせ" },
+            { en: "typography", pos: "名", ja: "印刷デザイン" },
+            { en: "historical", pos: "形", ja: "歴史的な" },
+            { en: "artistically", pos: "副", ja: "芸術的に" },
+            { en: "subtle", pos: "形", ja: "繊細な" },
+            { en: "none", pos: "代", ja: "どれも～ない" },
+            { en: "practical", pos: "形", ja: "実用的な, 実際の" },
+            { en: "Macintosh", pos: "固名", ja: "マック(マッキントッシュ)" },
+            { en: "backwards", pos: "副", ja: "後ろへ" },
+            { en: "trust", pos: "動", ja: "～を信じる" },
+            { en: "somehow", pos: "副", ja: "どうにかして" },
+            { en: "devastating", pos: "形", ja: "衝撃的な" },
+            { en: "successful", pos: "形", ja: "成功した" },
+            { en: "animation", pos: "名", ja: "アニメーション" },
+            { en: "studio", pos: "名", ja: "スタジオ" },
+            { en: "remarkable", pos: "形", ja: "驚くべき" },
+            { en: "satisfied", pos: "形", ja: "満足している" },
+            { en: "settle", pos: "動", ja: "落ち着く" },
+            { en: "fortunately", pos: "副", ja: "幸運にも" },
+            { en: "surgery", pos: "名", ja: "手術" },
+            { en: "certainty", pos: "名", ja: "確信" },
+            { en: "drown", pos: "動", ja: "～(声・音)をかき消す" },
+            { en: "importantly", pos: "副", ja: "重要なことには" },
+            { en: "intuition", pos: "名", ja: "直観" },
+            { en: "secondary", pos: "形", ja: "二次的な" },
+            { en: "publication", pos: "名", ja: "出版物" },
+            { en: "issue", pos: "名", ja: "(雑誌・新聞などの)号" }
+        ];
+
+        // --- 1. テキスト読み上げ (ネイティブボイス対応) ---
         let utterance = null;
         let isPlaying = false;
         let isPaused = false;
 
-        function togglePlay() {
-            if (isPlaying && !isPaused) {
-                // 再生中なら一時停止
-                window.speechSynthesis.pause();
-                isPaused = true;
-                document.getElementById('play-btn').innerHTML = '<span class="material-icons">play_arrow</span>';
-            } else if (isPaused) {
-                // 一時停止中なら再開
-                window.speechSynthesis.resume();
-                isPaused = false;
-                document.getElementById('play-btn').innerHTML = '<span class="material-icons">pause</span>';
-            } else {
-                // 停止中なら最初から再生
-                playText();
-            }
-        }
-
-      // 英語のボイスを探す関数
         function getEnglishVoice() {
             const voices = window.speechSynthesis.getVoices();
-            // 'en-US'（アメリカ英語）を含むボイスを優先して探す
             let voice = voices.find(v => v.lang === 'en-US');
-            // なければ 'en'（英語全般）を探す
             if (!voice) voice = voices.find(v => v.lang.startsWith('en'));
             return voice;
         }
 
-        // --- 修正版：テキスト読み上げ ---
+        function togglePlay() {
+            if (isPlaying && !isPaused) {
+                window.speechSynthesis.pause();
+                isPaused = true;
+                document.getElementById('play-btn').innerHTML = '<span class="material-icons">play_arrow</span>';
+            } else if (isPaused) {
+                window.speechSynthesis.resume();
+                isPaused = false;
+                document.getElementById('play-btn').innerHTML = '<span class="material-icons">pause</span>';
+            } else {
+                playText();
+            }
+        }
+
         function playText() {
             window.speechSynthesis.cancel();
-            
             const text = document.getElementById('readable-text').innerText;
             utterance = new SpeechSynthesisUtterance(text);
             
-            // ★ここが変更点：強制的に英語ボイスをセット
             const enVoice = getEnglishVoice();
             if(enVoice) utterance.voice = enVoice;
             
@@ -217,19 +280,6 @@
             document.getElementById('play-btn').innerHTML = '<span class="material-icons">pause</span>';
         }
 
-        // --- 修正版：単語再生 ---
-        window.speakOne = (text) => {
-            if(isPlaying) return; 
-            const u = new SpeechSynthesisUtterance(text);
-            
-            // ★ここが変更点：強制的に英語ボイスをセット
-            const enVoice = getEnglishVoice();
-            if(enVoice) u.voice = enVoice;
-
-            u.lang = 'en-US';
-            speechSynthesis.speak(u);
-        }
-
         function stopText() {
             window.speechSynthesis.cancel();
             isPlaying = false;
@@ -240,14 +290,58 @@
         function changeSpeed() {
             const val = document.getElementById('speed-rate').value;
             document.getElementById('speed-val').innerText = val + "x";
-            // スピードを変えるには一度リセットが必要
             if(isPlaying) {
                 stopText();
-                playText(); // 新しい速度で再開
+                playText();
             }
         }
 
-        // --- 2. 単語再生 (単発) ---
+        // --- 2. 単語帳 & 赤シート機能 ---
+        
+        function renderWords() {
+            const container = document.getElementById('word-list-container');
+            container.innerHTML = '';
+            wordData.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'word-item';
+                li.innerHTML = `
+                    <div class="word-info">
+                        <div class="en">${item.en} <span class="pos">${item.pos}</span></div>
+                        <div class="ja" onclick="revealWord(this)">${item.ja}</div>
+                    </div>
+                    <button class="play-mini" onclick="speakOne('${item.en.replace(/'/g, "\\'")}')"><span class="material-icons">volume_up</span></button>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        let isRedSheetActive = false;
+        function toggleRedSheet() {
+            isRedSheetActive = !isRedSheetActive;
+            const btn = document.getElementById('red-sheet-btn');
+            const list = document.getElementById('word-list-container');
+            
+            if (isRedSheetActive) {
+                btn.classList.add('active');
+                btn.innerHTML = '<span class="material-icons">visibility</span> 答えを見る';
+                list.classList.add('red-sheet-mode');
+                // 全てのめくった状態をリセット
+                document.querySelectorAll('.ja.revealed').forEach(el => el.classList.remove('revealed'));
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '<span class="material-icons">visibility_off</span> 赤シート';
+                list.classList.remove('red-sheet-mode');
+            }
+        }
+
+        function revealWord(element) {
+            // 赤シートモードの時だけめくれるようにする
+            if (isRedSheetActive) {
+                element.classList.toggle('revealed');
+            }
+        }
+
+        // --- 3. 単語再生 (単発) ---
         let currentWord = "";
         window.showPopup = (word, mean) => {
             currentWord = word;
@@ -258,14 +352,15 @@
         window.closePopup = () => document.getElementById('popup-overlay').style.display = 'none';
         window.playCurrentWord = () => speakOne(currentWord);
         window.speakOne = (text) => {
-            // 長文再生中は邪魔しないように
             if(isPlaying) return; 
             const u = new SpeechSynthesisUtterance(text);
+            const enVoice = getEnglishVoice();
+            if(enVoice) u.voice = enVoice;
             u.lang = 'en-US';
             speechSynthesis.speak(u);
         }
 
-        // --- 3. クイズ機能 ---
+        // --- 4. クイズ機能 ---
         const quizzes = [
             { q: "Where did Steve Jobs give this speech?", options: ["Harvard University", "Stanford University", "Reed College"], ans: 1 },
             { q: "What is the first story about?", options: ["Love and loss", "Death", "Connecting the dots"], ans: 2 },
@@ -308,7 +403,7 @@
             }
         }
 
-        // --- 4. SNS機能 ---
+        // --- 5. SNS機能 ---
         const discussions = [
             { id: 'q1', author: 'Mr. Tanaka', role: 'teacher', text: '【Q1】なぜジョブズは大学を中退したのですか？本文から理由を探してみましょう。' },
             { id: 'q2', author: 'Mr. Tanaka', role: 'teacher', text: '【Q2】"Connecting the dots" とは、ジョブズの人生においてどういう意味でしたか？' }
@@ -363,7 +458,6 @@
             document.getElementById(`btn-${name}`).classList.add('active');
             document.getElementById(`tab-${name}`).classList.add('active');
             
-            // Textタブ以外に行ったら音声を止める
             if(name !== 'paper') {
                 stopText();
                 document.getElementById('audio-player').style.display = 'none';
@@ -375,6 +469,7 @@
         // 起動処理
         initSNS();
         renderQuiz();
+        renderWords(); // 単語リスト生成
     </script>
 </body>
 </html>
