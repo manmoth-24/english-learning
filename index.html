@@ -3,136 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English SNS Class</title>
+    <title>Debug Mode</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        
-        /* タブのデザイン */
-        .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-        .tab-btn { padding: 10px 20px; border: none; cursor: pointer; background: #ddd; border-radius: 20px; font-weight: bold;}
-        .tab-btn.active { background: #007bff; color: white; }
-        
-        /* 画面の切り替え */
-        .page { display: none; background: white; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .page.active { display: block; }
-
-        /* SNSのデザイン */
-        .post { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
-        .teacher-badge { background: green; color: white; padding: 2px 5px; font-size: 0.8rem; border-radius: 4px; }
-        .comment-list { background: #f9f9f9; padding: 10px; border-radius: 8px; list-style: none; margin: 10px 0; }
-        .comment-item { border-bottom: 1px dotted #ccc; padding: 5px 0; font-size: 0.9rem; }
-        
-        /* 全文のデザイン */
-        .paper-text { font-family: "Georgia", serif; line-height: 1.8; }
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
+        /* 診断ログ表示エリア（黒い箱） */
+        #debug-console {
+            background: #000; color: #0f0; 
+            padding: 15px; margin-bottom: 20px; 
+            border-radius: 8px; font-family: monospace; 
+            height: 150px; overflow-y: scroll; border: 2px solid red;
+        }
+        .input-area { background: white; padding: 20px; border-radius: 10px; }
+        input { padding: 10px; width: 70%; border: 1px solid #ccc; }
+        button { padding: 10px 20px; background: blue; color: white; border: none; }
     </style>
 </head>
 <body>
 
-    <div class="tab-nav">
-        <button class="tab-btn" onclick="show('paper')">Paper (全文)</button>
-        <button class="tab-btn active" onclick="show('sns')">Class SNS</button>
-    </div>
+    <h3>診断ログ (ここにエラーが出ます)</h3>
+    <div id="debug-console">System Ready...<br></div>
 
-    <div id="paper" class="page">
-        <h2>Connecting the Dots</h2>
-        <div class="paper-text">
-            <p>I am honored to be with you today...</p>
-            <p>(ここに教科書の全文が入ります)</p>
-        </div>
-    </div>
-
-    <div id="sns" class="page active">
-        <div class="post">
-            <h3><span class="teacher-badge">Teacher</span> Mr. Tanaka</h3>
-            <p>【Question】なぜジョブズは中退したのですか？</p>
-            
-            <ul id="list-q1" class="comment-list">Loading...</ul>
-            <input id="input-q1" type="text" placeholder="意見を入力...">
-            <button onclick="send('q1')">送信</button>
-        </div>
-
-        <div class="post">
-            <h3><span class="teacher-badge">Teacher</span> Mr. Tanaka</h3>
-            <p>【Discussion】"Connecting the dots" とはどういう意味？</p>
-            
-            <ul id="list-q2" class="comment-list">Loading...</ul>
-            <input id="input-q2" type="text" placeholder="意見を入力...">
-            <button onclick="send('q2')">送信</button>
-        </div>
+    <div class="input-area">
+        <h3>テスト送信</h3>
+        <p>下のボタンを押して、上の黒い箱を見てください。</p>
+        <input type="text" id="message" placeholder="テストメッセージ">
+        <button id="send-btn" onclick="trySend()">送信テスト</button>
     </div>
 
     <script>
-        // ★★★ ここを書き換える！ ★★★
-        const URL = "https://olmaivevtfipahmceuji.supabase.co";
-        const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sbWFpdmV2dGZpcGFobWNldWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNTM1NTYsImV4cCI6MjA4NTYyOTU1Nn0";
-        // ★★★★★★★★★★★★★★★★★
-
-        const { createClient } = supabase;
-        const db = createClient(URL, KEY);
-
-        // 画面切り替え
-        function show(id) {
-            document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.target.classList.add('active');
+        // --- 1. 診断用ツール（画面に文字を出す機能） ---
+        function log(msg) {
+            const box = document.getElementById('debug-console');
+            box.innerHTML += `> ${msg}<br>`;
+            box.scrollTop = box.scrollHeight; // 自動スクロール
         }
 
-        // コメント送信
-        // コメント送信機能（エラー表示版）
-        async function send(postId) {
-            const input = document.getElementById('input-' + postId); // または input-box などのID
-            if(!input.value) return;
+        // --- 2. エラーをキャッチする設定 ---
+        window.onerror = function(message, source, lineno, colno, error) {
+            log(`❌ CRITICAL ERROR: ${message}`);
+            return true;
+        };
+
+        // --- 3. Supabase設定 ---
+        log("初期化を開始します...");
+
+        // ★★★ ↓ここだけ書き換えてください！ ★★★
+        const SUPABASE_URL = "https://olmaivevtfipahmceuji.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sbWFpdmV2dGZpcGFobWNldWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNTM1NTYsImV4cCI6MjA4NTYyOTU1Nn0";
+        // ★★★ ↑ここだけ書き換えてください！ ★★★
+
+        let db = null;
+
+        try {
+            if (typeof supabase === 'undefined') {
+                throw new Error("Supabaseライブラリが読み込まれていません！");
+            }
+            const { createClient } = supabase;
+            db = createClient(SUPABASE_URL, SUPABASE_KEY);
+            log("✅ Supabase接続準備OK");
+        } catch (e) {
+            log(`❌ 設定エラー: ${e.message}`);
+        }
+
+        // --- 4. 送信機能 ---
+        async function trySend() {
+            log("ボタンが押されました");
             
-            // Supabaseに送信
-            const { error } = await db
-                .from('comments')
-                .insert([{ post_id: postId, content: input.value }]);
-            
-            // ★ここが重要！エラーがあったらiPadの画面に表示する
-            if (error) {
-                alert("エラー発生！！\n" + error.message + "\n" + error.details);
-            } else {
-                alert("送信成功！");
-                input.value = ''; // 成功したらクリア
+            const input = document.getElementById('message');
+            const text = input.value;
+
+            if (!text) {
+                log("⚠️ 文字が入力されていません");
+                return;
+            }
+
+            if (!db) {
+                log("❌ データベースの設定が間違っています");
+                return;
+            }
+
+            log(`「${text}」を送信中...`);
+
+            try {
+                // post_id は固定で 'test' にしています
+                const { data, error } = await db
+                    .from('comments')
+                    .insert([{ post_id: 'test', content: text }]);
+
+                if (error) {
+                    log(`❌ 送信失敗 (Supabaseエラー):`);
+                    log(`Code: ${error.code}`);
+                    log(`Message: ${error.message}`);
+                    log(`Hint: ${error.hint || 'なし'}`);
+                } else {
+                    log("🎉 送信成功！データベースを確認してください。");
+                    input.value = "";
+                }
+            } catch (err) {
+                log(`❌ 予期せぬエラー: ${err.message}`);
             }
         }
-
-        // コメント読み込み (リアルタイム)
-        function loadComments(postId) {
-            const list = document.getElementById('list-' + postId);
-            
-            // 初回読み込み & リアルタイム監視
-            db.from('comments').select('*').eq('post_id', postId)
-              .then(({ data }) => render(list, data));
-
-            db.channel('any')
-              .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => {
-                  if(payload.new.post_id === postId) {
-                      // 新しいコメントが来たら追加
-                      const li = document.createElement('li');
-                      li.className = 'comment-item';
-                      li.innerText = payload.new.content;
-                      list.appendChild(li);
-                  }
-              }).subscribe();
-        }
-
-        function render(listElement, data) {
-            listElement.innerHTML = '';
-            data.forEach(d => {
-                const li = document.createElement('li');
-                li.className = 'comment-item';
-                li.innerText = d.content;
-                listElement.appendChild(li);
-            });
-        }
-
-        // 起動時に読み込み開始
-        loadComments('q1');
-        loadComments('q2');
-
     </script>
 </body>
 </html>
