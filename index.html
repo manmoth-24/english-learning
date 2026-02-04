@@ -12,7 +12,7 @@
         :root { --primary: #007AFF; --bg: #F2F2F7; --paper: #FFF; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: #1c1c1e; }
         
-        /* ヘッダーとタブ */
+        /* ヘッダー */
         header { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #c6c6c8; position: sticky; top: 0; z-index: 100; }
         .tab-nav { display: flex; background: #fff; padding: 5px; }
         .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #8e8e93; cursor: pointer; border-bottom: 3px solid transparent; }
@@ -24,11 +24,32 @@
         /* --- Tab 1: Paper (本文) --- */
         #tab-paper { background: var(--paper); padding: 30px; border-radius: 12px; line-height: 2.0; font-family: "Georgia", serif; font-size: 1.05rem; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         #tab-paper.active { display: block; }
-        /* クリックできる単語 */
+        
+        /* ★クリックできる単語のデザイン★ */
         .w { color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(0,122,255,0.3); }
         .w:active { background: yellow; }
 
-        /* --- Tab 2: SNS (議論) --- */
+        /* --- ポップアップ（単語カード） --- */
+        #popup-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;
+        }
+        #popup-card {
+            background: white; width: 80%; max-width: 300px; padding: 25px; border-radius: 16px;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #popup-word { font-size: 1.8rem; font-weight: bold; color: #333; display: block; margin-bottom: 5px; }
+        #popup-mean { font-size: 1rem; color: #666; margin-bottom: 20px; display: block; }
+        
+        .audio-btn {
+            background: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%;
+            font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto;
+            box-shadow: 0 4px 10px rgba(0,122,255,0.4); transition: 0.2s;
+        }
+        .audio-btn:active { transform: scale(0.9); background: #005bb5; }
+        .close-btn { margin-top: 20px; background: none; border: none; color: #999; text-decoration: underline; cursor: pointer; }
+
+        /* --- Tab 2: SNS --- */
         #tab-sns { display: none; }
         #tab-sns.active { display: block; }
         .sns-card { background: #fff; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -38,13 +59,13 @@
         .card-body { padding: 15px; font-size: 0.95rem; line-height: 1.6; }
         .comments-area { background: #f9f9f9; padding: 15px; }
         .comment-list { list-style: none; padding: 0; margin: 0 0 15px 0; }
-        .comment-item { display: flex; margin-bottom: 10px; animation: fadeIn 0.3s; }
+        .comment-item { display: flex; margin-bottom: 10px; }
         .comment-bubble { background: #fff; padding: 8px 14px; border-radius: 16px; border: 1px solid #e5e5ea; margin-left: 8px; flex: 1; font-size: 0.9rem; }
         .input-box { display: flex; gap: 8px; }
-        .input-box input { flex: 1; padding: 10px 15px; border: 1px solid #c6c6c8; border-radius: 20px; outline: none; font-size: 16px; } /* iOSでズームしない設定 */
+        .input-box input { flex: 1; padding: 10px 15px; border: 1px solid #c6c6c8; border-radius: 20px; outline: none; font-size: 16px; }
         .input-box button { background: var(--primary); color: white; border: none; padding: 0 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-        /* --- Tab 3: Words (単語帳) --- */
+        /* --- Tab 3: Words --- */
         #tab-words { display: none; }
         #tab-words.active { display: block; }
         .word-list { list-style: none; padding: 0; background: white; border-radius: 12px; overflow: hidden; }
@@ -52,9 +73,9 @@
         .word-item:last-child { border-bottom: none; }
         .en { font-weight: bold; font-size: 1.1rem; color: #333; }
         .ja { color: #666; font-size: 0.9rem; }
-        .play-btn { background: none; border: 1px solid #007AFF; color: #007AFF; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .play-mini { border: 1px solid var(--primary); color: var(--primary); width: 32px; height: 32px; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer;}
 
-        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes popIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
     </style>
 </head>
 <body>
@@ -77,41 +98,44 @@
         
         <div id="tab-paper" class="active">
             <h2>The First Story</h2>
-            <p>I am honored to be with you today at your <span class="w" onclick="mean('卒業式')">commencement</span> from one of the finest universities in the world.</p>
+            
+            <p>I am honored to be with you today at your <span class="w" onclick="showPopup('commencement', '卒業式')">commencement</span> from one of the finest universities in the world.</p>
+            
             <p>I never graduated from college. Truth be told, this is the closest I've ever gotten to a college graduation. Today I want to tell you three stories from my life. That's it. No big deal. Just three stories.</p>
             <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
             
             <p>The first story is about <strong>connecting the dots</strong>.</p>
             
-            <p>I <span class="w" onclick="mean('中退した')">dropped out</span> of Reed College after the first 6 months, but then stayed around as a <span class="w" onclick="mean('聴講生（単位なしで授業を受ける学生）')">drop-in</span> for another 18 months or so before I really quit.</p>
+            <p>I <span class="w" onclick="showPopup('dropped out', '中退した')">dropped out</span> of Reed College after the first 6 months, but then stayed around as a <span class="w" onclick="showPopup('drop-in', '聴講生（もぐりの学生）')">drop-in</span> for another 18 months or so before I really quit.</p>
             
             <p>So why did I drop out?</p>
             
-            <p>It started before I was born. My <span class="w" onclick="mean('生みの〜')">biological</span> mother was a young, unwed college graduate student, and she decided to put me up for <span class="w" onclick="mean('養子縁組')">adoption</span>.</p>
-            
-            <p>(...中略: 養子の話...)</p>
+            <p>It started before I was born. My <span class="w" onclick="showPopup('biological mother', '生みの母')">biological mother</span> was a young, unwed college graduate student, and she decided to put me up for <span class="w" onclick="showPopup('adoption', '養子縁組')">adoption</span>.</p>
 
-            <p>17 years later I did go to college. But I <span class="w" onclick="mean('無邪気に、世間知らずに')">naively</span> chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college <span class="w" onclick="mean('授業料')">tuition</span>.</p>
+            <p>17 years later I did go to college. But I <span class="w" onclick="showPopup('naively', '世間知らずに、単純に')">naively</span> chose a college that was almost as expensive as Stanford, and all of my working-class parents' savings were being spent on my college <span class="w" onclick="showPopup('tuition', '授業料')">tuition</span>.</p>
             
-            <p>After six months, I couldn't see the value in it. I had no idea what I wanted to do with my life and no idea how college was going to help me figure it out. And here I was spending all of the money my parents had saved their entire life.</p>
-            
-            <p>So I decided to drop out and trust that it would all work out OK. It was pretty scary at the time, but looking back it was one of the best decisions I ever made.</p>
-            
-            <p>You can't connect the dots looking forward; you can only connect them looking backward. So you have to trust that the dots will somehow connect in your future.</p>
+            <p>You can't <span class="w" onclick="showPopup('connect the dots', '点と点をつなぐ')">connect the dots</span> looking forward; you can only connect them looking backward.</p>
         </div>
 
         <div id="tab-words">
             <ul class="word-list">
-                <li class="word-item"><span class="en">commencement</span> <span class="ja">卒業式、開始</span></li>
-                <li class="word-item"><span class="en">drop out</span> <span class="ja">中退する</span></li>
-                <li class="word-item"><span class="en">drop-in</span> <span class="ja">（ふらっと立ち寄る）聴講生</span></li>
-                <li class="word-item"><span class="en">biological mother</span> <span class="ja">生みの母</span></li>
-                <li class="word-item"><span class="en">adoption</span> <span class="ja">養子縁組</span></li>
-                <li class="word-item"><span class="en">naively</span> <span class="ja">単純に、世間知らずに</span></li>
-                <li class="word-item"><span class="en">tuition</span> <span class="ja">授業料</span></li>
-                <li class="word-item"><span class="en">connect the dots</span> <span class="ja">点と点をつなぐ</span></li>
+                <li class="word-item">
+                    <div><div class="en">commencement</div><div class="ja">卒業式</div></div>
+                    <button class="play-mini" onclick="speak('commencement')"><span class="material-icons">volume_up</span></button>
+                </li>
+                <li class="word-item">
+                    <div><div class="en">drop out</div><div class="ja">中退する</div></div>
+                    <button class="play-mini" onclick="speak('drop out')"><span class="material-icons">volume_up</span></button>
+                </li>
+                <li class="word-item">
+                    <div><div class="en">tuition</div><div class="ja">授業料</div></div>
+                    <button class="play-mini" onclick="speak('tuition')"><span class="material-icons">volume_up</span></button>
+                </li>
+                 <li class="word-item">
+                    <div><div class="en">naively</div><div class="ja">単純に、世間知らずに</div></div>
+                    <button class="play-mini" onclick="speak('naively')"><span class="material-icons">volume_up</span></button>
+                </li>
             </ul>
-            <p style="text-align:center; color:#888; margin-top:20px;">Textタブの青い文字をタップしても意味が出ます。</p>
         </div>
 
         <div id="tab-sns">
@@ -119,9 +143,22 @@
         </div>
     </div>
 
+    <div id="popup-overlay" onclick="closePopup()">
+        <div id="popup-card" onclick="event.stopPropagation()">
+            <span id="popup-word">Word</span>
+            <span id="popup-mean">Meaning</span>
+            <br>
+            <button class="audio-btn" onclick="playCurrentWord()">
+                <span class="material-icons">volume_up</span>
+            </button>
+            <br>
+            <button class="close-btn" onclick="closePopup()">Close</button>
+        </div>
+    </div>
+
     <script>
         // ==========================================
-        // ★★★ ここに URL と KEY を入れてください！！ ★★★
+        // ★★★ 頂いた情報を埋め込みました ★★★
         const SUPABASE_URL = "https://olmaivevtfipahmceuji.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sbWFpdmV2dGZpcGFobWNldWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNTM1NTYsImV4cCI6MjA4NTYyOTU1Nn0.7RlnISpA9VEWXPMmz0L94l2lCemiXjHblXW8BPI_YP8";   
         // ==========================================
@@ -129,10 +166,35 @@
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 単語の意味ポップアップ ---
-        window.mean = (text) => {
-            alert("意味: " + text);
+        // --- 音声・ポップアップ機能 ---
+        let currentWord = "";
+
+        // ポップアップを開く
+        window.showPopup = (word, mean) => {
+            currentWord = word;
+            document.getElementById('popup-word').innerText = word;
+            document.getElementById('popup-mean').innerText = mean;
+            document.getElementById('popup-overlay').style.display = 'flex';
         }
+
+        // ポップアップを閉じる
+        window.closePopup = () => {
+            document.getElementById('popup-overlay').style.display = 'none';
+        }
+
+        // ポップアップ内の単語を再生
+        window.playCurrentWord = () => {
+            speak(currentWord);
+        }
+
+        // 読み上げエンジン（ブラウザ標準機能）
+        window.speak = (text) => {
+            const uttr = new SpeechSynthesisUtterance(text);
+            uttr.lang = 'en-US'; // 英語モード
+            uttr.rate = 1.0;     // 速度
+            speechSynthesis.speak(uttr);
+        }
+
 
         // --- SNSデータ ---
         const discussions = [
@@ -140,7 +202,6 @@
             { id: 'q2', author: 'Mr. Tanaka', role: 'teacher', text: '【Q2】"Connecting the dots" とは、ジョブズの人生においてどういう意味でしたか？' }
         ];
 
-        // --- 初期化 ---
         async function init() {
             const feed = document.getElementById('feed');
             feed.innerHTML = '';
@@ -199,7 +260,7 @@
             input.value = '';
         }
 
-        // --- タブ切り替え ---
+        // タブ切り替え
         window.switchTab = (name) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('div[id^="tab-"]').forEach(d => d.classList.remove('active'));
