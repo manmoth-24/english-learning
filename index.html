@@ -80,12 +80,23 @@
         }
 
         // コメント送信
+        // コメント送信機能（エラー表示版）
         async function send(postId) {
-            const input = document.getElementById('input-' + postId);
+            const input = document.getElementById('input-' + postId); // または input-box などのID
             if(!input.value) return;
             
-            await db.from('comments').insert([{ post_id: postId, content: input.value }]);
-            input.value = ''; // クリア
+            // Supabaseに送信
+            const { error } = await db
+                .from('comments')
+                .insert([{ post_id: postId, content: input.value }]);
+            
+            // ★ここが重要！エラーがあったらiPadの画面に表示する
+            if (error) {
+                alert("エラー発生！！\n" + error.message + "\n" + error.details);
+            } else {
+                alert("送信成功！");
+                input.value = ''; // 成功したらクリア
+            }
         }
 
         // コメント読み込み (リアルタイム)
