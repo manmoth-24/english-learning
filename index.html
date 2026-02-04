@@ -181,12 +181,26 @@
             }
         }
 
+      // 英語のボイスを探す関数
+        function getEnglishVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            // 'en-US'（アメリカ英語）を含むボイスを優先して探す
+            let voice = voices.find(v => v.lang === 'en-US');
+            // なければ 'en'（英語全般）を探す
+            if (!voice) voice = voices.find(v => v.lang.startsWith('en'));
+            return voice;
+        }
+
+        // --- 修正版：テキスト読み上げ ---
         function playText() {
-            window.speechSynthesis.cancel(); // 前のをキャンセル
+            window.speechSynthesis.cancel();
             
-            // HTMLからテキストを取得（余計なタグを除く）
             const text = document.getElementById('readable-text').innerText;
             utterance = new SpeechSynthesisUtterance(text);
+            
+            // ★ここが変更点：強制的に英語ボイスをセット
+            const enVoice = getEnglishVoice();
+            if(enVoice) utterance.voice = enVoice;
             
             utterance.lang = 'en-US';
             utterance.rate = document.getElementById('speed-rate').value;
@@ -201,6 +215,19 @@
             isPlaying = true;
             isPaused = false;
             document.getElementById('play-btn').innerHTML = '<span class="material-icons">pause</span>';
+        }
+
+        // --- 修正版：単語再生 ---
+        window.speakOne = (text) => {
+            if(isPlaying) return; 
+            const u = new SpeechSynthesisUtterance(text);
+            
+            // ★ここが変更点：強制的に英語ボイスをセット
+            const enVoice = getEnglishVoice();
+            if(enVoice) u.voice = enVoice;
+
+            u.lang = 'en-US';
+            speechSynthesis.speak(u);
         }
 
         function stopText() {
